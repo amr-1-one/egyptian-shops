@@ -2,7 +2,9 @@
    CONFIGURATION
 ===================================================== */
 
-const OVERPASS_API = "https://overpass-api.de/api/interpreter";
+const OVERPASS_API =
+    "https://overpass-api.de/api/interpreter";
+
 const SEARCH_RADIUS = 5000;
 
 
@@ -19,10 +21,11 @@ let currentLocation = null;
 
 
 /* =====================================================
-   CATEGORY NAMES
+   CATEGORY MAP
 ===================================================== */
 
 const categoryNames = {
+
     restaurant: "مطعم",
     sweets: "حلويات",
     market: "سوبر ماركت",
@@ -40,9 +43,12 @@ const categoryNames = {
     cosmetics: "مستحضرات تجميل",
     books: "كتب",
     sports: "أدوات رياضية",
+    supermarket: "سوبر ماركت",
+    convenience: "متجر",
     department_store: "متجر كبير",
     hairdresser: "حلاق / كوافير",
     other: "مكان"
+
 };
 
 
@@ -55,7 +61,12 @@ function initializeMap() {
     const mapElement = document.getElementById("map");
 
     if (!mapElement) {
-        console.error("لم يتم العثور على عنصر الخريطة.");
+        console.error("Map element not found.");
+        return;
+    }
+
+    if (typeof L === "undefined") {
+        console.error("Leaflet has not loaded.");
         return;
     }
 
@@ -68,9 +79,11 @@ function initializeMap() {
         "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
         {
             maxZoom: 19,
-            attribution: "&copy; OpenStreetMap contributors"
+            attribution:
+                '&copy; OpenStreetMap contributors'
         }
     ).addTo(map);
+
 }
 
 
@@ -80,21 +93,25 @@ function initializeMap() {
 
 function showLoading() {
 
-    const loading = document.getElementById("mapLoading");
+    const loading =
+        document.getElementById("mapLoading");
 
     if (loading) {
         loading.classList.remove("hidden");
     }
+
 }
 
 
 function hideLoading() {
 
-    const loading = document.getElementById("mapLoading");
+    const loading =
+        document.getElementById("mapLoading");
 
     if (loading) {
         loading.classList.add("hidden");
     }
+
 }
 
 
@@ -104,270 +121,163 @@ function hideLoading() {
 
 function clearMarkers() {
 
+    if (!map) {
+        return;
+    }
+
     markers.forEach(marker => {
 
-        if (map) {
-            map.removeLayer(marker);
-        }
+        map.removeLayer(marker);
 
     });
 
     markers = [];
+
 }
 
 
 /* =====================================================
-   USER LOCATION
+   CREATE MAP MARKER
 ===================================================== */
 
-function loadUserLocation() {
+function addShopMarker(shop) {
 
-    const button = document.getElementById("locationBtn");
-
-    if (!button) {
+    if (!map) {
         return;
     }
 
-    /*
-       التأكد أن المتصفح يدعم تحديد الموقع
-    */
+    const marker =
+        L.marker([
+            shop.lat,
+            shop.lng
+        ]).addTo(map);
 
-    if (!navigator.geolocation) {
 
-        alert(
-            "المتصفح لا يدعم تحديد الموقع."
-        );
+    let phoneHTML = "";
 
-        return;
+    if (shop.phone) {
+
+        phoneHTML = `
+
+            <a
+                href="tel:${escapeAttribute(shop.phone)}"
+                class="popup-button"
+            >
+
+                <i class="fa-solid fa-phone"></i>
+
+                اتصال
+
+            </a>
+
+        `;
+
     }
 
 
-    /*
-       لازم الموقع يكون HTTPS
-    */
-
-    if (
-        window.location.protocol !== "https:" &&
-        window.location.hostname !== "localhost" &&
-        window.location.hostname !== "127.0.0.1"
-    ) {
-
-        alert(
-            "تحديد الموقع يحتاج أن يعمل الموقع عبر HTTPS."
-        );
-
-        return;
-    }
+    const directionsURL =
+        `https://www.google.com/maps/dir/?api=1&destination=${shop.lat},${shop.lng}`;
 
 
-    button.disabled = true;
+    const popupHTML = `
 
-    button.innerHTML = `
-        <i class="fa-solid fa-spinner fa-spin"></i>
-        جاري تحديد الموقع...
+        <div class="custom-popup">
+
+            <div class="popup-title">
+
+                ${escapeHTML(shop.name)}
+
+            </div>
+
+
+            <div class="popup-category">
+
+                ${escapeHTML(shop.categoryName)}
+
+            </div>
+
+
+            ${
+                shop.address
+                    ? `
+                        <div class="popup-address">
+
+                            <i class="fa-solid fa-location-dot"></i>
+
+                            ${escapeHTML(shop.address)}
+
+                        </div>
+                    `
+                    : ""
+            }
+
+
+            ${
+                shop.phone
+                    ? `
+                        <div class="popup-phone">
+
+                            <i class="fa-solid fa-phone"></i>
+
+                            ${escapeHTML(shop.phone)}
+
+                        </div>
+                    `
+                    : ""
+            }
+
+
+            <div class="popup-buttons">
+
+                ${phoneHTML}
+
+
+                <a
+                    href="${directionsURL}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="popup-button secondary"
+                >
+
+                    <i class="fa-solid fa-route"></i>
+
+                    الاتجاهات
+
+                </a>
+
+            </div>
+
+        </div>
+
     `;
 
-    showLoading();
 
+    marker.bindPopup(popupHTML);
 
-    /*
-       طلب إذن الموقع
-    */
-
-    navigator.geolocation.getCurrentPosition(
-
-        async function(position) {
-
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
-
-            console.log("الموقع الحالي:", lat, lng);
-
-
-            currentLocation = {
-                lat: lat,
-                lng: lng
-            };
-
-
-            /*
-               تحريك الخريطة للموقع
-            */
-
-            if (map) {
-
-                map.setView(
-                    [lat, lng],
-                    15
-                );
-
-            }
-
-
-            /*
-               إزالة العلامة القديمة
-            */
-
-            if (userMarker && map) {
-
-                map.removeLayer(userMarker);
-
-            }
-
-
-            /*
-               وضع علامة على موقع المستخدم
-            */
-
-            userMarker = L.marker(
-                [lat, lng]
-            )
-            .addTo(map)
-            .bindPopup("أنت هنا")
-            .openPopup();
-
-
-            /*
-               تحديث النص
-            */
-
-            const locationText =
-                document.getElementById(
-                    "currentLocationText"
-                );
-
-            if (locationText) {
-
-                locationText.textContent =
-                    "تم تحديد موقعك الحالي";
-
-            }
-
-
-            /*
-               تحميل الأماكن القريبة
-            */
-
-            try {
-
-                const elements =
-                    await fetchNearbyPlaces(
-                        lat,
-                        lng
-                    );
-
-                allShops =
-                    convertPlaces(elements);
-
-                filterShops();
-
-            } catch (error) {
-
-                console.error(
-                    "خطأ في تحميل الأماكن:",
-                    error
-                );
-
-                alert(
-                    "تم تحديد موقعك، لكن حدثت مشكلة في تحميل الأماكن القريبة."
-                );
-
-            }
-
-
-            hideLoading();
-
-            button.disabled = false;
-
-            button.innerHTML = `
-                <i class="fa-solid fa-location-crosshairs"></i>
-                تم تحديد موقعي
-            `;
-
-        },
-
-
-        /*
-           في حالة فشل تحديد الموقع
-        */
-
-        function(error) {
-
-            console.error(
-                "Geolocation error:",
-                error
-            );
-
-            hideLoading();
-
-            button.disabled = false;
-
-            button.innerHTML = `
-                <i class="fa-solid fa-location-crosshairs"></i>
-                موقعي الحالي
-            `;
-
-
-            let message =
-                "لم نتمكن من تحديد موقعك.";
-
-
-            switch (error.code) {
-
-                case error.PERMISSION_DENIED:
-
-                    message =
-                        "تم رفض إذن الموقع. اسمح للموقع من إعدادات المتصفح ثم جرّب مرة أخرى.";
-
-                    break;
-
-
-                case error.POSITION_UNAVAILABLE:
-
-                    message =
-                        "تعذر الحصول على موقعك. تأكد من تشغيل خدمة الموقع في الهاتف.";
-
-                    break;
-
-
-                case error.TIMEOUT:
-
-                    message =
-                        "استغرق تحديد الموقع وقتًا طويلًا. حاول مرة أخرى.";
-
-                    break;
-
-
-                default:
-
-                    message =
-                        "حدث خطأ أثناء تحديد موقعك.";
-
-            }
-
-
-            alert(message);
-
-        },
-
-
-        /*
-           إعدادات تحديد الموقع
-        */
-
-        {
-            enableHighAccuracy: true,
-            timeout: 20000,
-            maximumAge: 0
-        }
-
-    );
+    markers.push(marker);
 
 }
 
 
 /* =====================================================
-   OVERPASS
+   SHOW MARKERS
+===================================================== */
+
+function showMarkers(shopList) {
+
+    clearMarkers();
+
+    shopList.forEach(shop => {
+
+        addShopMarker(shop);
+
+    });
+
+}
+
+
+/* =====================================================
+   OVERPASS QUERY
 ===================================================== */
 
 async function fetchNearbyPlaces(lat, lng) {
@@ -377,6 +287,7 @@ async function fetchNearbyPlaces(lat, lng) {
         [out:json][timeout:30];
 
         (
+
             nwr(
                 around:${SEARCH_RADIUS},
                 ${lat},
@@ -400,11 +311,13 @@ async function fetchNearbyPlaces(lat, lng) {
                 ${lat},
                 ${lng}
             )["amenity"="pharmacy"];
+
         );
 
         out center tags;
 
     `;
+
 
     const url =
         OVERPASS_API +
@@ -431,6 +344,7 @@ async function fetchNearbyPlaces(lat, lng) {
 
 
     return data.elements || [];
+
 }
 
 
@@ -442,12 +356,18 @@ function convertPlaces(elements) {
 
     const result = [];
 
+
     elements.forEach(element => {
 
-        const tags = element.tags || {};
+        const tags =
+            element.tags || {};
 
-        let lat = element.lat;
-        let lng = element.lon;
+
+        let lat =
+            element.lat;
+
+        let lng =
+            element.lon;
 
 
         if (
@@ -455,8 +375,11 @@ function convertPlaces(elements) {
             element.center
         ) {
 
-            lat = element.center.lat;
-            lng = element.center.lon;
+            lat =
+                element.center.lat;
+
+            lng =
+                element.center.lon;
 
         }
 
@@ -467,6 +390,7 @@ function convertPlaces(elements) {
         ) {
 
             return;
+
         }
 
 
@@ -478,8 +402,11 @@ function convertPlaces(elements) {
 
 
         let category = "other";
+
         let categoryName = "مكان";
 
+
+        /* SHOP */
 
         if (tags.shop) {
 
@@ -491,36 +418,55 @@ function convertPlaces(elements) {
             categoryName =
                 categoryNames[category] ||
                 "محل";
+
         }
 
+
+        /* RESTAURANT */
 
         if (
             tags.amenity ===
             "restaurant"
         ) {
 
-            category = "restaurant";
-            categoryName = "مطعم";
+            category =
+                "restaurant";
+
+            categoryName =
+                "مطعم";
+
         }
 
+
+        /* CAFE */
 
         if (
             tags.amenity ===
             "cafe"
         ) {
 
-            category = "cafe";
-            categoryName = "كافيه";
+            category =
+                "cafe";
+
+            categoryName =
+                "كافيه";
+
         }
 
+
+        /* PHARMACY */
 
         if (
             tags.amenity ===
             "pharmacy"
         ) {
 
-            category = "pharmacy";
-            categoryName = "صيدلية";
+            category =
+                "pharmacy";
+
+            categoryName =
+                "صيدلية";
+
         }
 
 
@@ -541,26 +487,33 @@ function convertPlaces(elements) {
             buildAddress(tags);
 
 
+        const openingHours =
+            tags.opening_hours ||
+            "";
+
+
         result.push({
 
             id:
                 `${element.type}-${element.id}`,
 
-            name: name,
+            name,
 
-            category: category,
+            category,
 
-            categoryName: categoryName,
+            categoryName,
 
             lat: Number(lat),
 
             lng: Number(lng),
 
-            phone: phone,
+            phone,
 
-            website: website,
+            website,
 
-            address: address,
+            address,
+
+            openingHours,
 
             image:
                 tags.image ||
@@ -572,11 +525,12 @@ function convertPlaces(elements) {
 
 
     return removeDuplicates(result);
+
 }
 
 
 /* =====================================================
-   CATEGORY NORMALIZATION
+   NORMALIZE SHOP CATEGORIES
 ===================================================== */
 
 function normalizeShopCategory(shopType) {
@@ -584,26 +538,37 @@ function normalizeShopCategory(shopType) {
     const types = {
 
         supermarket: "market",
+
         convenience: "market",
+
         grocery: "market",
 
         clothes: "shopping",
+
         fashion: "shopping",
 
         confectionery: "sweets",
 
         bakery: "bakery",
+
         butcher: "butcher",
+
         greengrocer: "greengrocer",
 
         electronics: "electronics",
+
         mobile_phone: "mobile_phone",
 
         shoes: "shoes",
+
         jewelry: "jewelry",
+
         furniture: "furniture",
+
         cosmetics: "cosmetics",
+
         books: "books",
+
         sports: "sports",
 
         department_store:
@@ -611,6 +576,7 @@ function normalizeShopCategory(shopType) {
 
         hairdresser:
             "hairdresser"
+
     };
 
 
@@ -619,6 +585,7 @@ function normalizeShopCategory(shopType) {
         shopType ||
         "other"
     );
+
 }
 
 
@@ -630,25 +597,43 @@ function buildAddress(tags) {
 
     const parts = [];
 
+
     if (tags["addr:street"]) {
+
         parts.push(
             tags["addr:street"]
         );
+
     }
 
+
     if (tags["addr:suburb"]) {
+
         parts.push(
             tags["addr:suburb"]
         );
+
     }
 
+
     if (tags["addr:city"]) {
+
         parts.push(
             tags["addr:city"]
         );
+
     }
 
+
+    if (parts.length === 0) {
+
+        return "";
+
+    }
+
+
     return parts.join(" - ");
+
 }
 
 
@@ -658,7 +643,9 @@ function buildAddress(tags) {
 
 function removeDuplicates(places) {
 
-    const seen = new Set();
+    const seen =
+        new Set();
+
 
     return places.filter(place => {
 
@@ -667,125 +654,18 @@ function removeDuplicates(places) {
 
 
         if (seen.has(key)) {
+
             return false;
+
         }
 
 
         seen.add(key);
 
         return true;
+
     });
-}
 
-
-/* =====================================================
-   ADD MARKER
-===================================================== */
-
-function addShopMarker(shop) {
-
-    if (!map) {
-        return;
-    }
-
-
-    const marker =
-        L.marker([
-            shop.lat,
-            shop.lng
-        ]).addTo(map);
-
-
-    const directionsURL =
-        `https://www.google.com/maps/dir/?api=1&destination=${shop.lat},${shop.lng}`;
-
-
-    const phoneHTML =
-        shop.phone
-            ? `
-                <a
-                    href="tel:${escapeAttribute(shop.phone)}"
-                    class="popup-button"
-                >
-                    <i class="fa-solid fa-phone"></i>
-                    اتصال
-                </a>
-            `
-            : "";
-
-
-    const popupHTML = `
-
-        <div class="custom-popup">
-
-            <div class="popup-title">
-                ${escapeHTML(shop.name)}
-            </div>
-
-            <div class="popup-category">
-                ${escapeHTML(shop.categoryName)}
-            </div>
-
-            ${
-                shop.address
-                    ? `
-                        <div class="popup-address">
-                            <i class="fa-solid fa-location-dot"></i>
-                            ${escapeHTML(shop.address)}
-                        </div>
-                    `
-                    : ""
-            }
-
-            ${
-                shop.phone
-                    ? `
-                        <div class="popup-phone">
-                            <i class="fa-solid fa-phone"></i>
-                            ${escapeHTML(shop.phone)}
-                        </div>
-                    `
-                    : ""
-            }
-
-            <div class="popup-buttons">
-
-                ${phoneHTML}
-
-                <a
-                    href="${directionsURL}"
-                    target="_blank"
-                    rel="noopener"
-                    class="popup-button secondary"
-                >
-                    <i class="fa-solid fa-route"></i>
-                    الاتجاهات
-                </a>
-
-            </div>
-
-        </div>
-
-    `;
-
-
-    marker.bindPopup(popupHTML);
-
-    markers.push(marker);
-}
-
-
-/* =====================================================
-   SHOW MARKERS
-===================================================== */
-
-function showMarkers(shopList) {
-
-    clearMarkers();
-
-    shopList.forEach(shop => {
-        addShopMarker(shop);
-    });
 }
 
 
@@ -799,6 +679,7 @@ function renderShops(shopList) {
         document.getElementById(
             "shopsGrid"
         );
+
 
     const count =
         document.getElementById(
@@ -840,6 +721,7 @@ function renderShops(shopList) {
         `;
 
         return;
+
     }
 
 
@@ -857,21 +739,24 @@ function renderShops(shopList) {
                 "shop-card";
 
 
-            const directions =
-                `https://www.google.com/maps/dir/?api=1&destination=${shop.lat},${shop.lng}`;
-
-
             const phoneButton =
                 shop.phone
                     ? `
                         <a
                             href="tel:${escapeAttribute(shop.phone)}"
                         >
+
                             <i class="fa-solid fa-phone"></i>
+
                             اتصال
+
                         </a>
-                    `
+                      `
                     : "";
+
+
+            const directions =
+                `https://www.google.com/maps/dir/?api=1&destination=${shop.lat},${shop.lng}`;
 
 
             card.innerHTML = `
@@ -886,16 +771,23 @@ function renderShops(shopList) {
                                     alt="${escapeAttribute(shop.name)}"
                                     loading="lazy"
                                 >
-                            `
+                              `
                             : `
                                 <div class="shop-image-placeholder">
+
                                     <i class="fa-solid fa-store"></i>
+
                                 </div>
-                            `
+                              `
                     }
 
+
                     <span class="shop-category">
-                        ${escapeHTML(shop.categoryName)}
+
+                        ${escapeHTML(
+                            shop.categoryName
+                        )}
+
                     </span>
 
                 </div>
@@ -903,8 +795,13 @@ function renderShops(shopList) {
 
                 <div class="shop-info">
 
+
                     <h3>
-                        ${escapeHTML(shop.name)}
+
+                        ${escapeHTML(
+                            shop.name
+                        )}
+
                     </h3>
 
 
@@ -916,11 +813,15 @@ function renderShops(shopList) {
                                     <i class="fa-solid fa-location-dot"></i>
 
                                     <span>
-                                        ${escapeHTML(shop.address)}
+
+                                        ${escapeHTML(
+                                            shop.address
+                                        )}
+
                                     </span>
 
                                 </div>
-                            `
+                              `
                             : ""
                     }
 
@@ -933,11 +834,15 @@ function renderShops(shopList) {
                                     <i class="fa-solid fa-phone"></i>
 
                                     <span>
-                                        ${escapeHTML(shop.phone)}
+
+                                        ${escapeHTML(
+                                            shop.phone
+                                        )}
+
                                     </span>
 
                                 </div>
-                            `
+                              `
                             : ""
                     }
 
@@ -966,10 +871,11 @@ function renderShops(shopList) {
 
                         ${phoneButton}
 
+
                         <a
                             href="${directions}"
                             target="_blank"
-                            rel="noopener"
+                            rel="noopener noreferrer"
                         >
 
                             <i class="fa-solid fa-route"></i>
@@ -980,6 +886,7 @@ function renderShops(shopList) {
 
                     </div>
 
+
                 </div>
 
             `;
@@ -988,55 +895,7 @@ function renderShops(shopList) {
             grid.appendChild(card);
 
         });
-}
 
-
-/* =====================================================
-   FILTER
-===================================================== */
-
-function filterShops() {
-
-    const input =
-        document.getElementById(
-            "searchInput"
-        );
-
-
-    const search =
-        input
-            ? input.value.trim().toLowerCase()
-            : "";
-
-
-    const filtered =
-        allShops.filter(shop => {
-
-            const matchesCategory =
-                currentCategory === "all" ||
-                shop.category === currentCategory;
-
-
-            const text =
-                `${shop.name} ${shop.categoryName} ${shop.address}`
-                    .toLowerCase();
-
-
-            const matchesSearch =
-                search === "" ||
-                text.includes(search);
-
-
-            return (
-                matchesCategory &&
-                matchesSearch
-            );
-        });
-
-
-    renderShops(filtered);
-
-    showMarkers(filtered);
 }
 
 
@@ -1047,7 +906,9 @@ function filterShops() {
 function calculateDistanceText(shop) {
 
     if (!currentLocation) {
+
         return "";
+
     }
 
 
@@ -1062,13 +923,21 @@ function calculateDistanceText(shop) {
 
     if (distance < 1) {
 
-        return `${Math.round(distance * 1000)} متر`;
+        return `${Math.round(
+            distance * 1000
+        )} متر`;
+
     }
 
 
     return `${distance.toFixed(1)} كم`;
+
 }
 
+
+/* =====================================================
+   DISTANCE CALCULATION
+===================================================== */
 
 function calculateDistance(
     lat1,
@@ -1079,14 +948,21 @@ function calculateDistance(
 
     const R = 6371;
 
+
     const dLat =
-        toRadians(lat2 - lat1);
+        toRadians(
+            lat2 - lat1
+        );
+
 
     const dLon =
-        toRadians(lon2 - lon1);
+        toRadians(
+            lon2 - lon1
+        );
 
 
     const a =
+
         Math.sin(dLat / 2) *
         Math.sin(dLat / 2)
 
@@ -1117,6 +993,7 @@ function calculateDistance(
 
 
     return R * c;
+
 }
 
 
@@ -1125,11 +1002,321 @@ function toRadians(degrees) {
     return degrees *
         Math.PI /
         180;
+
 }
 
 
 /* =====================================================
-   AREA SEARCH
+   FILTER SHOPS
+===================================================== */
+
+function filterShops() {
+
+    const input =
+        document.getElementById(
+            "searchInput"
+        );
+
+
+    if (!input) {
+        return;
+    }
+
+
+    const search =
+        input.value
+            .trim()
+            .toLowerCase();
+
+
+    const filtered =
+        allShops.filter(shop => {
+
+            const matchesCategory =
+
+                currentCategory ===
+                "all"
+
+                ||
+
+                shop.category ===
+                currentCategory;
+
+
+            const text =
+
+                `${shop.name}
+                 ${shop.categoryName}
+                 ${shop.address}`
+                    .toLowerCase();
+
+
+            const matchesSearch =
+
+                search === ""
+
+                ||
+
+                text.includes(search);
+
+
+            return (
+                matchesCategory &&
+                matchesSearch
+            );
+
+        });
+
+
+    renderShops(filtered);
+
+    showMarkers(filtered);
+
+}
+
+
+/* =====================================================
+   LOAD LOCATION
+===================================================== */
+
+function loadUserLocation() {
+
+    if (!navigator.geolocation) {
+
+        alert(
+            "المتصفح لا يدعم تحديد الموقع."
+        );
+
+        return;
+
+    }
+
+
+    if (!map) {
+
+        alert(
+            "الخريطة لم يتم تحميلها بعد. حاول مرة أخرى."
+        );
+
+        return;
+
+    }
+
+
+    const button =
+        document.getElementById(
+            "locationBtn"
+        );
+
+
+    if (!button) {
+        return;
+    }
+
+
+    button.disabled = true;
+
+
+    button.innerHTML = `
+
+        <i class="fa-solid fa-spinner fa-spin"></i>
+
+        جاري تحديد الموقع...
+
+    `;
+
+
+    showLoading();
+
+
+    navigator.geolocation.getCurrentPosition(
+
+        async function(position) {
+
+            const lat =
+                position.coords.latitude;
+
+            const lng =
+                position.coords.longitude;
+
+
+            currentLocation = {
+                lat: lat,
+                lng: lng
+            };
+
+
+            map.setView(
+                [lat, lng],
+                15
+            );
+
+
+            if (userMarker) {
+
+                map.removeLayer(
+                    userMarker
+                );
+
+            }
+
+
+            userMarker =
+                L.marker([
+                    lat,
+                    lng
+                ])
+                .addTo(map)
+                .bindPopup("أنت هنا")
+                .openPopup();
+
+
+            const locationText =
+                document.getElementById(
+                    "currentLocationText"
+                );
+
+
+            if (locationText) {
+
+                locationText.textContent =
+                    "تم تحديد موقعك الحالي";
+
+            }
+
+
+            try {
+
+                const elements =
+                    await fetchNearbyPlaces(
+                        lat,
+                        lng
+                    );
+
+
+                allShops =
+                    convertPlaces(
+                        elements
+                    );
+
+
+                filterShops();
+
+
+            } catch (error) {
+
+                console.error(
+                    "Nearby places error:",
+                    error
+                );
+
+
+                alert(
+                    "تم تحديد موقعك، لكن حدثت مشكلة أثناء تحميل الأماكن القريبة."
+                );
+
+            }
+
+
+            hideLoading();
+
+
+            button.disabled = false;
+
+
+            button.innerHTML = `
+
+                <i class="fa-solid fa-location-crosshairs"></i>
+
+                تم تحديد موقعي
+
+            `;
+
+        },
+
+
+        function(error) {
+
+            console.error(
+                "Geolocation error:",
+                error
+            );
+
+
+            hideLoading();
+
+
+            button.disabled = false;
+
+
+            button.innerHTML = `
+
+                <i class="fa-solid fa-location-crosshairs"></i>
+
+                موقعي الحالي
+
+            `;
+
+
+            let message =
+                "لم نتمكن من تحديد موقعك.";
+
+
+            if (
+                error.code ===
+                error.PERMISSION_DENIED
+            ) {
+
+                message =
+                    "تم رفض إذن الموقع. اسمح للموقع بالوصول إلى موقعك من إعدادات المتصفح ثم حاول مرة أخرى.";
+
+            }
+
+
+            else if (
+                error.code ===
+                error.POSITION_UNAVAILABLE
+            ) {
+
+                message =
+                    "تعذر تحديد موقعك. تأكد من تشغيل خدمة الموقع (GPS) ثم حاول مرة أخرى.";
+
+            }
+
+
+            else if (
+                error.code ===
+                error.TIMEOUT
+            ) {
+
+                message =
+                    "انتهى وقت تحديد الموقع. تأكد من تشغيل GPS وحاول مرة أخرى.";
+
+            }
+
+
+            alert(message);
+
+        },
+
+
+        {
+
+            enableHighAccuracy: true,
+
+            timeout: 20000,
+
+            maximumAge: 0
+
+        }
+
+    );
+
+}
+
+
+/* =====================================================
+   SEARCH AREA
 ===================================================== */
 
 async function searchArea() {
@@ -1156,6 +1343,7 @@ async function searchArea() {
         );
 
         return;
+
     }
 
 
@@ -1165,7 +1353,9 @@ async function searchArea() {
     try {
 
         const location =
-            await geocodeArea(area);
+            await geocodeArea(
+                area
+            );
 
 
         if (!location) {
@@ -1177,16 +1367,20 @@ async function searchArea() {
             hideLoading();
 
             return;
+
         }
 
 
-        const lat = location.lat;
-        const lng = location.lng;
+        const lat =
+            location.lat;
+
+        const lng =
+            location.lng;
 
 
         currentLocation = {
-            lat: lat,
-            lng: lng
+            lat,
+            lng
         };
 
 
@@ -1225,7 +1419,9 @@ async function searchArea() {
                 lng
             ])
             .addTo(map)
-            .bindPopup(location.name);
+            .bindPopup(
+                location.name
+            );
 
 
         const elements =
@@ -1236,10 +1432,13 @@ async function searchArea() {
 
 
         allShops =
-            convertPlaces(elements);
+            convertPlaces(
+                elements
+            );
 
 
-        currentCategory = "all";
+        currentCategory =
+            "all";
 
 
         const searchInput =
@@ -1249,7 +1448,9 @@ async function searchArea() {
 
 
         if (searchInput) {
+
             searchInput.value = "";
+
         }
 
 
@@ -1257,10 +1458,13 @@ async function searchArea() {
 
         filterShops();
 
-
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            "Area search error:",
+            error
+        );
+
 
         alert(
             "حدث خطأ أثناء البحث عن المنطقة."
@@ -1270,6 +1474,7 @@ async function searchArea() {
 
 
     hideLoading();
+
 }
 
 
@@ -1281,11 +1486,17 @@ async function geocodeArea(area) {
 
     const url =
         "https://nominatim.openstreetmap.org/search" +
+
         "?format=json" +
+
         "&limit=1" +
+
         "&countrycodes=eg" +
+
         "&accept-language=ar" +
+
         "&q=" +
+
         encodeURIComponent(area);
 
 
@@ -1298,6 +1509,7 @@ async function geocodeArea(area) {
         throw new Error(
             "Geocoding failed"
         );
+
     }
 
 
@@ -1306,7 +1518,9 @@ async function geocodeArea(area) {
 
 
     if (!data.length) {
+
         return null;
+
     }
 
 
@@ -1326,6 +1540,7 @@ async function geocodeArea(area) {
             data[0].display_name
 
     };
+
 }
 
 
@@ -1374,6 +1589,7 @@ function setupCategoryButtons() {
         );
 
     });
+
 }
 
 
@@ -1406,11 +1622,12 @@ function updateActiveCategory() {
             }
 
         });
+
 }
 
 
 /* =====================================================
-   SEARCH
+   SEARCH INPUT
 ===================================================== */
 
 function setupSearch() {
@@ -1428,8 +1645,13 @@ function setupSearch() {
 
     input.addEventListener(
         "input",
-        filterShops
+        () => {
+
+            filterShops();
+
+        }
     );
+
 }
 
 
@@ -1454,17 +1676,20 @@ function setupShowAll() {
         "click",
         () => {
 
-            currentCategory = "all";
+            currentCategory =
+                "all";
 
 
-            const input =
+            const searchInput =
                 document.getElementById(
                     "searchInput"
                 );
 
 
-            if (input) {
-                input.value = "";
+            if (searchInput) {
+
+                searchInput.value = "";
+
             }
 
 
@@ -1474,82 +1699,7 @@ function setupShowAll() {
 
         }
     );
-}
 
-
-/* =====================================================
-   AREA SEARCH SETUP
-===================================================== */
-
-function setupAreaSearch() {
-
-    const button =
-        document.getElementById(
-            "areaSearchBtn"
-        );
-
-
-    const input =
-        document.getElementById(
-            "areaInput"
-        );
-
-
-    if (button) {
-
-        button.addEventListener(
-            "click",
-            searchArea
-        );
-
-    }
-
-
-    if (input) {
-
-        input.addEventListener(
-            "keydown",
-            event => {
-
-                if (event.key === "Enter") {
-
-                    searchArea();
-
-                }
-
-            }
-        );
-
-    }
-}
-
-
-/* =====================================================
-   LOCATION BUTTON SETUP
-===================================================== */
-
-function setupLocationButton() {
-
-    const button =
-        document.getElementById(
-            "locationBtn"
-        );
-
-
-    if (!button) {
-
-        console.error(
-            "زر موقعي الحالي غير موجود."
-        );
-
-        return;
-    }
-
-
-    button.addEventListener(
-        "click",
-        loadUserLocation
-    );
 }
 
 
@@ -1564,10 +1714,12 @@ function setupMobileMenu() {
             "mobileMenu"
         );
 
+
     const open =
         document.getElementById(
             "mobileMenuBtn"
         );
+
 
     const close =
         document.getElementById(
@@ -1620,6 +1772,92 @@ function setupMobileMenu() {
             );
 
         });
+
+}
+
+
+/* =====================================================
+   AREA SEARCH BUTTON
+===================================================== */
+
+function setupAreaSearch() {
+
+    const button =
+        document.getElementById(
+            "areaSearchBtn"
+        );
+
+
+    const input =
+        document.getElementById(
+            "areaInput"
+        );
+
+
+    if (!button || !input) {
+        return;
+    }
+
+
+    button.addEventListener(
+        "click",
+        searchArea
+    );
+
+
+    input.addEventListener(
+        "keydown",
+        event => {
+
+            if (
+                event.key ===
+                "Enter"
+            ) {
+
+                searchArea();
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   LOCATION BUTTON
+===================================================== */
+
+function setupLocationButton() {
+
+    const button =
+        document.getElementById(
+            "locationBtn"
+        );
+
+
+    if (!button) {
+
+        console.error(
+            "locationBtn not found."
+        );
+
+        return;
+
+    }
+
+
+    button.addEventListener(
+        "click",
+        function(event) {
+
+            event.preventDefault();
+
+            loadUserLocation();
+
+        }
+    );
+
 }
 
 
@@ -1650,6 +1888,7 @@ function setupAddShop() {
 
         }
     );
+
 }
 
 
@@ -1660,22 +1899,44 @@ function setupAddShop() {
 function escapeHTML(value) {
 
     return String(value)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+
+        .replace(
+            /</g,
+            "&lt;"
+        )
+
+        .replace(
+            />/g,
+            "&gt;"
+        )
+
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
 }
 
 
 function escapeAttribute(value) {
 
     return escapeHTML(value);
+
 }
 
 
 /* =====================================================
-   START WEBSITE
+   INITIALIZATION
 ===================================================== */
 
 document.addEventListener(
