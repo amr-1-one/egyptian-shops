@@ -1,1888 +1,185 @@
 /* =====================================================
-   محلات مصر - SCRIPT.JS
+   CONFIGURATION
 ===================================================== */
 
-"use strict";
+const OVERPASS_API =
+    "https://overpass-api.de/api/interpreter";
 
-/* =====================================================
-   CONFIG
-===================================================== */
-
-const CONFIG = {
-    defaultLocation: {
-        lat: 30.2997,
-        lng: 31.7449,
-        zoom: 14
-    },
-
-    geocodeDelay: 1100,
-
-    nominatimUrl:
-        "https://nominatim.openstreetmap.org/search",
-
-    mapTileUrl:
-        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-
-    mapAttribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>'
-};
+const SEARCH_RADIUS = 5000;
 
 
 /* =====================================================
-   CATEGORY CONFIG
-===================================================== */
-
-const CATEGORY_CONFIG = {
-
-    all: {
-        name: "الكل",
-        icon: "fa-solid fa-location-dot",
-        color: "#2563eb"
-    },
-
-    restaurant: {
-        name: "مطاعم",
-        icon: "fa-solid fa-utensils",
-        color: "#ef4444"
-    },
-
-    sweets: {
-        name: "حلويات",
-        icon: "fa-solid fa-cake-candles",
-        color: "#ec4899"
-    },
-
-    market: {
-        name: "سوبر ماركت",
-        icon: "fa-solid fa-cart-shopping",
-        color: "#16a34a"
-    },
-
-    shopping: {
-        name: "ملابس",
-        icon: "fa-solid fa-shirt",
-        color: "#8b5cf6"
-    },
-
-    cafe: {
-        name: "كافيهات",
-        icon: "fa-solid fa-mug-hot",
-        color: "#92400e"
-    },
-
-    pharmacy: {
-        name: "صيدليات",
-        icon: "fa-solid fa-prescription-bottle-medical",
-        color: "#0891b2"
-    }
-};
-
-
-/* =====================================================
-   MANUAL SHOPS
-===================================================== */
-
-const MANUAL_SHOPS = [
-
-    /* =================================================
-       ب لبن
-    ================================================= */
-
-    {
-        id: "brand-blaban-10th",
-
-        name: "ب لبن",
-
-        category: "sweets",
-
-        lat: 30.2997,
-        lng: 31.7449,
-
-        categoryName: "حلويات",
-
-        phone: "15761",
-
-        address:
-            "طريق الأردنية، بجوار معرض سيراميكا كليوباترا، بالقرب من السجل المدني والمطافي، أول العاشر من رمضان، الشرقية",
-
-        menuUrl:
-            "https://www.talabat.com/ar/egypt/restaurant/793179/blaban-10th-of-ramadan?aid=10027",
-
-        menu: {
-
-            "دنيا الأرز": [
-
-                {
-                    name: "أرز بلبن سادة",
-                    description:
-                        "أرز بلبن سادة محضر من حليب طازج",
-                    price: "35 جنيه"
-                },
-
-                {
-                    name: "أرز بلبن مكسرات",
-                    description:
-                        "أرز بلبن مع مكسرات",
-                    price: "70 جنيه"
-                },
-
-                {
-                    name: "أرز بلبن مانجو",
-                    description:
-                        "أرز بلبن مع قطع مانجو فريش",
-                    price: "70 جنيه"
-                },
-
-                {
-                    name: "أرز قشطة مكسرات",
-                    description:
-                        "أرز بلبن مع قشطة ومكسرات",
-                    price: "85 جنيه"
-                }
-            ],
-
-            "دنيا القشطوطة": [
-
-                {
-                    name: "قشطوطة أرز بلبن كريمة",
-                    description:
-                        "أرز بلبن وكيك فادج وطبقة كريمة",
-                    price: "80 جنيه"
-                },
-
-                {
-                    name: "قشطوطة أرز بلبن مانجا",
-                    description:
-                        "أرز بلبن وكيك فادج وكريمة وقطع مانجو",
-                    price: "105 جنيه"
-                },
-
-                {
-                    name: "قشطوطة كريمة",
-                    description:
-                        "كيك فادج مع طبقة كريمة",
-                    price: "80 جنيه"
-                },
-
-                {
-                    name: "قشطوطة مانجا",
-                    description:
-                        "كيك فادج مع كريمة وقطع مانجو",
-                    price: "105 جنيه"
-                }
-            ],
-
-            "دنيا الكشري": [
-
-                {
-                    name: "كشري مانجو كبير",
-                    description:
-                        "أرز وكنافة وكريمة ومانجو وجلاش",
-                    price: "105 جنيه"
-                },
-
-                {
-                    name: "كشري نوتيلا كبير",
-                    description:
-                        "أرز وكنافة وكريمة ونوتيلا وجلاش",
-                    price: "100 جنيه"
-                },
-
-                {
-                    name: "كشري بيستاشيو كبير",
-                    description:
-                        "أرز وكنافة وكريمة وصوص بيستاشيو وجلاش",
-                    price: "115 جنيه"
-                },
-
-                {
-                    name: "كشري كيندر كبير",
-                    description:
-                        "أرز وكنافة وكريمة وشوكولاتة كيندر وجلاش",
-                    price: "110 جنيه"
-                },
-
-                {
-                    name: "كشري نوتيلا صغير",
-                    description:
-                        "أرز وكنافة وكريمة ونوتيلا وجلاش",
-                    price: "70 جنيه"
-                }
-            ],
-
-            "دنيا دبي": [
-
-                {
-                    name: "سنكوريتا كبيرة أوي",
-                    description:
-                        "نوجا وكراميل وفول سوداني وكيك فادج وتغليفة شوكولاتة",
-                    price: "125 جنيه"
-                },
-
-                {
-                    name: "كريب دبي",
-                    description:
-                        "كريب محمص مع كنافة بيستاشيو ونوتيلا",
-                    price: "145 جنيه"
-                },
-
-                {
-                    name: "كيك هبة دبي شيكولاتة وسط",
-                    description:
-                        "كيكة فادج مع كنافة وبيستاشيو وصوص شوكولاتة",
-                    price: "170 جنيه"
-                },
-
-                {
-                    name: "كيك هبة دبي كيندر وسط",
-                    description:
-                        "كيكة فادج مع كنافة وبيستاشيو وصوص كندر",
-                    price: "150 جنيه"
-                }
-            ],
-
-            "دنيا أم علي": [
-
-                {
-                    name: "أم علي بالسمنة البلدي",
-                    description:
-                        "طاجن أم علي بالحليب الساخن والسمن البلدي",
-                    price: "50 جنيه"
-                },
-
-                {
-                    name: "أم علي بالسمنة البلدي والمكسرات",
-                    description:
-                        "أم علي مع مكسرات مشكلة محمصة",
-                    price: "80 جنيه"
-                },
-
-                {
-                    name: "أم علي بالسمنة البلدي والقشطة",
-                    description:
-                        "أم علي مع طبقة قشطة طازجة",
-                    price: "70 جنيه"
-                },
-
-                {
-                    name: "أم علي بالقشطة والمكسرات",
-                    description:
-                        "أم علي مع قشطة ومكسرات",
-                    price: "100 جنيه"
-                }
-            ],
-
-            "دنيا العصير": [
-
-                {
-                    name: "امبو بيستاشيو",
-                    description:
-                        "جيلاتو إيطالي وحليب مكثف وصوصات ب لبن",
-                    price: "115 جنيه"
-                },
-
-                {
-                    name: "امبو بندق",
-                    description:
-                        "جيلاتو إيطالي وحليب مكثف وصوصات ب لبن",
-                    price: "105 جنيه"
-                },
-
-                {
-                    name: "امبو شيكولاتة",
-                    description:
-                        "جيلاتو إيطالي وحليب مكثف وصوصات ب لبن",
-                    price: "105 جنيه"
-                },
-
-                {
-                    name: "امبو مانجو",
-                    description:
-                        "جيلاتو إيطالي وحليب مكثف وصوصات ب لبن",
-                    price: "105 جنيه"
-                }
-            ]
-        }
-    },
-
-
-    /* =================================================
-       وهمي برجر
-    ================================================= */
-
-    {
-        id: "brand-wahmy-10th",
-
-        name: "وهمي برجر",
-
-        category: "restaurant",
-
-        lat: 30.2999,
-        lng: 31.7447,
-
-        categoryName: "مطاعم",
-
-        phone: "19905",
-
-        address:
-            "العاشر من رمضان، الشرقية",
-
-        menuUrl:
-            "https://www.talabat.com/ar/egypt/restaurant/795132/wahmy-burger-10th-of-ramadan--7th-district?aid=7920",
-
-        menu: {
-
-            "اختيارات على ذوقك": [
-
-                {
-                    name: "أبطال المونديال - بيف",
-                    description:
-                        "ساندويتش أنجوس بيف + بطاطس + مشروب",
-                    price: "170 جنيه"
-                },
-
-                {
-                    name: "أبطال المونديال - تشيكن",
-                    description:
-                        "ساندويتش دجاج + بطاطس + مشروب",
-                    price: "150 جنيه"
-                },
-
-                {
-                    name: "كورن ريبس",
-                    description:
-                        "ضلوع ذرة مقلية متبلة",
-                    price: "55 جنيه"
-                },
-
-                {
-                    name: "بطاطس",
-                    description:
-                        "بطاطس مقلية",
-                    price: "55 جنيه"
-                }
-            ]
-        }
-    },
-
-
-    /* =================================================
-       بازوكا
-    ================================================= */
-
-    {
-        id: "brand-bazooka-10th",
-
-        name: "بازوكا",
-
-        category: "restaurant",
-
-        lat: 30.3003,
-        lng: 31.7444,
-
-        categoryName: "مطاعم",
-
-        phone: "16455",
-
-        address:
-            "العاشر من رمضان، الشرقية",
-
-        menuUrl:
-            "https://www.talabat.com/ar/egypt/restaurant/786114/bazooka-10th-of-ramadan--7th-district?aid=7898",
-
-        menu: {
-
-            "وجبات": [
-
-                {
-                    name: "وجبة بازوكا سناك بوكس",
-                    description:
-                        "دجاج + خبز + فرايز",
-                    price: "140 جنيه"
-                },
-
-                {
-                    name: "كينج بوكس",
-                    description:
-                        "ساندويتش + قطعة دجاج + فرايز + كول سلو + مشروب",
-                    price: "260 جنيه"
-                },
-
-                {
-                    name: "ريزو",
-                    description:
-                        "أرز بالبهارات مع قطع الدجاج",
-                    price: "110 جنيه"
-                },
-
-                {
-                    name: "راب بوكس",
-                    description:
-                        "راب + قطعة تشكن + فرايز + كول سلو + مشروب",
-                    price: "235 جنيه"
-                }
-            ],
-
-            "ساندويتشات وإضافات": [
-
-                {
-                    name: "تشيكن فاير بازوكا",
-                    description:
-                        "زنجر سبايسي مع صوص حار وخس وطماطم وجبنة",
-                    price: "205 جنيه"
-                },
-
-                {
-                    name: "بيج فاير بازوكا",
-                    description:
-                        "دجاج كرسبي حار مع جبنة وتركي وهالبينو",
-                    price: "205 جنيه"
-                },
-
-                {
-                    name: "بطاطس وسط",
-                    description:
-                        "بطاطس",
-                    price: "55 جنيه"
-                },
-
-                {
-                    name: "تشيزي فرايز",
-                    description:
-                        "فرايز مع صوص جبنة",
-                    price: "90 جنيه"
-                }
-            ]
-        }
-    },
-
-
-    /* =================================================
-       باقي المطاعم
-    ================================================= */
-
-    {
-        id: "restaurant-mcdonalds-10th",
-        name: "ماكدونالدز",
-        category: "restaurant",
-        categoryName: "مطاعم",
-        phone: "19991",
-        address:
-            "طريق مصر إسماعيلية الصحراوي، داخل محطة بنزين توتال، العاشر من رمضان، الشرقية"
-    },
-
-    {
-        id: "restaurant-kfc-10th",
-        name: "كنتاكي",
-        category: "restaurant",
-        categoryName: "مطاعم",
-        phone: "19019",
-        address:
-            "كم 52.5 طريق القاهرة الإسماعيلية الصحراوي، أمام سيراميكا كليوباترا جروب، العاشر من رمضان، الشرقية"
-    },
-
-    {
-        id: "restaurant-cookdoor-10th",
-        name: "كوك دوور",
-        category: "restaurant",
-        categoryName: "مطاعم",
-        phone: "16999",
-        address:
-            "كم 52 طريق القاهرة الإسماعيلية، داخل محمد ثروت مول، الدور الأرضي، العاشر من رمضان، الشرقية"
-    },
-
-    {
-        id: "restaurant-pizzahut-10th",
-        name: "بيتزا هت",
-        category: "restaurant",
-        categoryName: "مطاعم",
-        phone: "0554412917",
-        address:
-            "كم 52 طريق مصر إسماعيلية الصحراوي، بجوار كنتاكي، العاشر من رمضان، الشرقية"
-    },
-
-    {
-        id: "restaurant-prego-10th",
-        name: "بريجو",
-        category: "restaurant",
-        categoryName: "مطاعم",
-        phone: "16121",
-        address:
-            "المجاورة التاسعة، خلف نادي الرواد، العاشر من رمضان، الشرقية"
-    },
-
-    {
-        id: "restaurant-shabrawy-10th",
-        name: "الشبراوي",
-        category: "restaurant",
-        categoryName: "مطاعم",
-        phone: "0554362030",
-        address:
-            "الحي الأول، مركز المدينة، بجوار المعهد التكنولوجي العالي HTI، العاشر من رمضان، الشرقية"
-    },
-
-    {
-        id: "restaurant-baltagy-10th",
-        name: "البلتاجي للمأكولات البحرية",
-        category: "restaurant",
-        categoryName: "مطاعم",
-        phone: "0554351635",
-        address:
-            "محور أبو بكر الصديق، الأردنية، داخل مجمع نجوم الصفا، العاشر من رمضان، الشرقية"
-    },
-
-    {
-        id: "restaurant-hadramout-10th",
-        name: "مطعم حضرموت الحلبى",
-        category: "restaurant",
-        categoryName: "مطاعم",
-        phone: "0554490247",
-        address:
-            "2 عمارات الأردنية، المرحلة د، الأردنية، أمام محطة الأتوبيس، العاشر من رمضان، الشرقية"
-    },
-
-    {
-        id: "restaurant-dragonwalk-10th",
-        name: "دراجون ووك",
-        category: "restaurant",
-        categoryName: "مطاعم",
-        phone: "01011796704",
-        address:
-            "المجاورة 19، ميدان السفيرة، العاشر من رمضان، الشرقية"
-    },
-
-    {
-        id: "restaurant-om-hassan-10th",
-        name: "مطعم أم حسن",
-        category: "restaurant",
-        categoryName: "مطاعم",
-        phone: "19500",
-        address:
-            "مجمع البنوك، أمام نادي الرواد الرياضي الاجتماعي، العاشر من رمضان، الشرقية"
-    },
-
-    {
-        id: "restaurant-wildburger-10th",
-        name: "وايلد برجر",
-        category: "restaurant",
-        categoryName: "مطاعم",
-        phone: "01206227645",
-        address:
-            "المجاورة 18، العاشر من رمضان، الشرقية"
-    },
-
-    {
-        id: "restaurant-citycrepe-10th",
-        name: "سيتي كريب",
-        category: "restaurant",
-        categoryName: "مطاعم",
-        phone: "01093453845",
-        address:
-            "فيلا 2، المجاورة الثانية، أمام كافيه تحويجة، العاشر من رمضان، الشرقية"
-    },
-
-    {
-        id: "restaurant-qesem-bey-10th",
-        name: "قاسم بيك",
-        category: "restaurant",
-        categoryName: "مطاعم",
-        phone: "01008758765",
-        address:
-            "شارع السنترال، الأردنية، داخل مول الصباح، الدور الأول، العاشر من رمضان، الشرقية"
-    },
-
-    {
-        id: "restaurant-roma-10th",
-        name: "روما فاست فود",
-        category: "restaurant",
-        categoryName: "مطاعم",
-        phone: "01028245555",
-        address:
-            "شارع الإمام الشافعي، المجاورة 19، بجوار سوبر ماركت بيم، العاشر من رمضان، الشرقية"
-    },
-
-    {
-        id: "restaurant-ketma-10th",
-        name: "مطعم قطمة",
-        category: "restaurant",
-        categoryName: "مطاعم",
-        phone: "01006930006",
-        address:
-            "الأردنية، مركز المدينة، داخل سيتي مول، برج 3، العاشر من رمضان، الشرقية"
-    },
-
-    {
-        id: "restaurant-nemo-10th",
-        name: "أسماك نيمو",
-        category: "restaurant",
-        categoryName: "مطاعم",
-        phone: "01001123551",
-        address:
-            "شارع إبراهيم حسين، متفرع من شارع أبو بكر الصديق، العاشر من رمضان، الشرقية"
-    },
-
-    {
-        id: "restaurant-layaly-elsham-10th",
-        name: "ليالي الشام",
-        category: "restaurant",
-        categoryName: "مطاعم",
-        phone: "01114007871",
-        address:
-            "شارع عمار بن ياسر، بجوار منار ماركت، العاشر من رمضان، الشرقية"
-    },
-
-
-    /* =================================================
-       MARKETS
-    ================================================= */
-
-    {
-        id: "market-shorayni-10th",
-        name: "الشريني ماركت",
-        category: "market",
-        categoryName: "سوبر ماركت",
-        address:
-            "الحي العاشر، العاشر من رمضان، الشرقية"
-    },
-
-    {
-        id: "market-barka-10th",
-        name: "البركة ماركت",
-        category: "market",
-        categoryName: "سوبر ماركت",
-        address:
-            "الحي 12، عمائر ص، العاشر من رمضان، الشرقية"
-    },
-
-    {
-        id: "market-kheir-marina-10th",
-        name: "خير ومارينا",
-        category: "market",
-        categoryName: "سوبر ماركت",
-        address:
-            "مصر النور، العاشر من رمضان، الشرقية"
-    },
-
-
-    /* =================================================
-       PHARMACIES
-    ================================================= */
-
-    {
-        id: "pharmacy-d-samuel-samy-10th",
-        name: "صيدلية د. صموئيل سامي",
-        category: "pharmacy",
-        categoryName: "صيدليات",
-        address:
-            "شارع السنترال، الأردنية، داخل سنتر المباركية، الدور الأرضي، العاشر من رمضان، الشرقية"
-    },
-
-    {
-        id: "pharmacy-d-tarek-abdelmonem-10th",
-        name: "صيدلية د. طارق عبد المنعم",
-        category: "pharmacy",
-        categoryName: "صيدليات",
-        address:
-            "25 المجاورة 66، العاشر من رمضان، الشرقية، بجوار دريم للدش، محل رقم 2"
-    },
-
-    {
-        id: "pharmacy-d-walaa-eldin-10th",
-        name: "صيدلية د. ولاء الدين",
-        category: "pharmacy",
-        categoryName: "صيدليات",
-        address:
-            "المجاورة السابعة، تقسيم الشرطة، العاشر من رمضان، بجوار مستشفى شرف التخصصي"
-    },
-
-    {
-        id: "pharmacy-refai-10th",
-        name: "صيدلية رفاعي",
-        category: "pharmacy",
-        categoryName: "صيدليات",
-        address:
-            "القطعة 43، الأردنية، العاشر من رمضان، داخل مجمع عبد المقصود التجاري، مبنى 10"
-    },
-
-    {
-        id: "pharmacy-san-boula-10th",
-        name: "صيدلية سان بولا",
-        category: "pharmacy",
-        categoryName: "صيدليات",
-        address:
-            "الحي الأول، مركز المدينة، داخل سنتر الحي الأول التجاري، مبنى عمر بن الخطاب، الدور الأرضي، العاشر من رمضان، الشرقية"
-    },
-
-    {
-        id: "pharmacy-ghanem-10th",
-        name: "صيدلية غانم",
-        category: "pharmacy",
-        categoryName: "صيدليات",
-        address:
-            "الأردنية، مركز المدينة، داخل المصرية سنتر 1، مدخل و، محل 11، العاشر من رمضان، الشرقية"
-    },
-
-    {
-        id: "pharmacy-harvey-hany-10th",
-        name: "صيدلية هارفي هاني",
-        category: "pharmacy",
-        categoryName: "صيدليات",
-        address:
-            "القطعة 45، المجاورة الأولى، العاشر من رمضان، بجوار كنيسة السيدة العذراء مريم"
-    },
-
-
-    /* =================================================
-       SWEETS
-    ================================================= */
-
-    {
-        id: "sweet-royal-sweet-10th",
-        name: "رويال سويت",
-        category: "sweets",
-        categoryName: "حلويات",
-        phone: "0554410530",
-        address:
-            "المنطقة الصناعية الثالثة، أمام شركة مصر للطيران، العاشر من رمضان، الشرقية"
-    },
-
-    {
-        id: "sweet-choco-planet-10th",
-        name: "شوكو بلانت",
-        category: "sweets",
-        categoryName: "حلويات",
-        phone: "01005271235",
-        address:
-            "شارع أبو بكر الصديق، الأردنية، مركز المدينة، داخل دلتا سنتر، عمارة 4، مكتب 3، العاشر من رمضان، الشرقية"
-    },
-
-    {
-        id: "sweet-bonboneta-10th",
-        name: "مجموعة بونبونيتا للمخبوزات والحلوى الجافة",
-        category: "sweets",
-        categoryName: "حلويات",
-        phone: "01221660792",
-        address:
-            "مجاورة 25، مجمع الصناعات الصغيرة، العاشر من رمضان، الشرقية"
-    },
-
-    {
-        id: "sweet-aytib-shamy-10th",
-        name: "حلويات أطيب شامي",
-        category: "sweets",
-        categoryName: "حلويات",
-        phone: "01120460237",
-        address:
-            "الحي الأول، مركز المدينة، داخل سنتر الحي الأول التجاري، الدور الأرضي، العاشر من رمضان، الشرقية"
-    },
-
-    {
-        id: "sweet-jam-10th",
-        name: "جام",
-        category: "sweets",
-        categoryName: "حلويات",
-        phone: "01007890740",
-        address:
-            "القطعة 17، المنطقة الصناعية، خلف الشركة الشرقية لصناعة الحلويات والشيكولاتة، العاشر من رمضان، الشرقية"
-    },
-
-    {
-        id: "sweet-golden-star-10th",
-        name: "جولدن ستار لصناعة الشيكولاتة والحلويات",
-        category: "sweets",
-        categoryName: "حلويات",
-        phone: "01012023914",
-        address:
-            "قطعة 39 أ، المنطقة الصناعية بالروبيكي، بجوار الميناء الجاف، العاشر من رمضان، الشرقية"
-    }
-];
-
-
-/* =====================================================
-   STATE
+   VARIABLES
 ===================================================== */
 
 let map = null;
-
 let userMarker = null;
-
-let accuracyCircle = null;
-
-let markersLayer = null;
-
+let markers = [];
+let allShops = [];
 let currentCategory = "all";
-
-let currentSearch = "";
-
-let currentArea = "";
-
-let userLocation = null;
-
-let geocodingInProgress = false;
+let currentLocation = null;
 
 
 /* =====================================================
-   DOM
+   CATEGORY MAP
 ===================================================== */
 
-const searchInput =
-    document.getElementById("searchInput");
+const categoryNames = {
 
-const areaInput =
-    document.getElementById("areaInput");
+    restaurant: "مطعم",
+    sweets: "حلويات",
+    market: "سوبر ماركت",
+    shopping: "ملابس",
+    cafe: "كافيه",
+    pharmacy: "صيدلية",
+    bakery: "مخبز",
+    butcher: "جزارة",
+    greengrocer: "خضار وفاكهة",
+    electronics: "إلكترونيات",
+    mobile_phone: "موبايلات",
+    shoes: "أحذية",
+    jewelry: "مجوهرات",
+    furniture: "أثاث",
+    cosmetics: "مستحضرات تجميل",
+    books: "كتب",
+    sports: "أدوات رياضية",
+    supermarket: "سوبر ماركت",
+    convenience: "متجر",
+    department_store: "متجر كبير",
+    hairdresser: "حلاق / كوافير",
+    other: "مكان"
 
-const areaSearchBtn =
-    document.getElementById("areaSearchBtn");
-
-const locationBtn =
-    document.getElementById("locationBtn");
-
-const shopsGrid =
-    document.getElementById("shopsGrid");
-
-const resultsCount =
-    document.getElementById("resultsCount");
-
-const mapLoading =
-    document.getElementById("mapLoading");
-
-const loadingText =
-    document.getElementById("loadingText");
-
-const currentLocationText =
-    document.getElementById("currentLocationText");
-
-const showAllBtn =
-    document.getElementById("showAllBtn");
-
-const mobileMenuBtn =
-    document.getElementById("mobileMenuBtn");
-
-const closeMenu =
-    document.getElementById("closeMenu");
-
-const mobileMenu =
-    document.getElementById("mobileMenu");
-
-const addShopBtn =
-    document.getElementById("addShopBtn");
+};
 
 
 /* =====================================================
-   INIT
+   INITIALIZE MAP
 ===================================================== */
 
-document.addEventListener(
-    "DOMContentLoaded",
-    init
-);
+function initializeMap() {
 
-
-function init() {
-
-    initMap();
-
-    setupEvents();
-
-    renderLegend();
-
-    renderShops();
-
-    updateResultsCount();
-
-    hideMapLoading();
-
-    startGeocoding();
-}
-
-
-/* =====================================================
-   MAP
-===================================================== */
-
-function initMap() {
-
-    const mapElement =
-        document.getElementById("map");
+    const mapElement = document.getElementById("map");
 
     if (!mapElement) {
+        console.error("Map element not found.");
         return;
     }
 
-
-    if (
-        typeof L === "undefined"
-    ) {
-
-        console.error(
-            "Leaflet library is not loaded."
-        );
-
+    if (typeof L === "undefined") {
+        console.error("Leaflet has not loaded.");
         return;
     }
 
-
-    map =
-        L.map(
-            "map",
-            {
-                zoomControl: true
-            }
-        )
-        .setView(
-            [
-                CONFIG.defaultLocation.lat,
-                CONFIG.defaultLocation.lng
-            ],
-            CONFIG.defaultLocation.zoom
-        );
-
+    map = L.map("map").setView(
+        [30.5877, 31.5020],
+        13
+    );
 
     L.tileLayer(
-        CONFIG.mapTileUrl,
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
         {
+            maxZoom: 19,
             attribution:
-                CONFIG.mapAttribution,
-
-            maxZoom: 19
+                '&copy; OpenStreetMap contributors'
         }
-    )
-    .addTo(map);
+    ).addTo(map);
 
-
-    markersLayer =
-        L.layerGroup()
-            .addTo(map);
-
-
-    renderMapMarkers();
 }
 
 
 /* =====================================================
-   EVENTS
+   LOADING
 ===================================================== */
 
-function setupEvents() {
+function showLoading() {
 
-    /* =================================================
-       SEARCH
-    ================================================= */
+    const loading =
+        document.getElementById("mapLoading");
 
-    if (searchInput) {
-
-        searchInput.addEventListener(
-            "input",
-            debounce(
-                function () {
-
-                    currentSearch =
-                        searchInput.value
-                            .trim()
-                            .toLowerCase();
-
-                    renderShops();
-
-                    renderMapMarkers();
-
-                },
-                250
-            )
-        );
+    if (loading) {
+        loading.classList.remove("hidden");
     }
 
+}
 
-    /* =================================================
-       AREA SEARCH
-    ================================================= */
 
-    if (areaSearchBtn) {
+function hideLoading() {
 
-        areaSearchBtn.addEventListener(
-            "click",
-            searchArea
-        );
+    const loading =
+        document.getElementById("mapLoading");
+
+    if (loading) {
+        loading.classList.add("hidden");
     }
 
-
-    if (areaInput) {
-
-        areaInput.addEventListener(
-            "keydown",
-            function (event) {
-
-                if (
-                    event.key === "Enter"
-                ) {
-
-                    event.preventDefault();
-
-                    searchArea();
-                }
-
-            }
-        );
-    }
-
-
-    /* =================================================
-       CURRENT LOCATION
-    ================================================= */
-
-    if (locationBtn) {
-
-        locationBtn.addEventListener(
-            "click",
-            getCurrentLocation
-        );
-    }
-
-
-    /* =================================================
-       SHOW ALL
-    ================================================= */
-
-    if (showAllBtn) {
-
-        showAllBtn.addEventListener(
-            "click",
-            function () {
-
-                currentCategory =
-                    "all";
-
-                currentSearch =
-                    "";
-
-                currentArea =
-                    "";
-
-
-                if (searchInput) {
-                    searchInput.value = "";
-                }
-
-                if (areaInput) {
-                    areaInput.value = "";
-                }
-
-
-                document
-                    .querySelectorAll(
-                        ".quick-category, .category-card, .legend-item"
-                    )
-                    .forEach(
-                        button => {
-
-                            button.classList.remove(
-                                "active"
-                            );
-                        }
-                    );
-
-
-                const allButton =
-                    document.querySelector(
-                        '[data-category="all"]'
-                    );
-
-
-                if (allButton) {
-                    allButton.classList.add(
-                        "active"
-                    );
-                }
-
-
-                renderShops();
-
-                renderMapMarkers();
-
-                scrollToExplore();
-            }
-        );
-    }
-
-
-    /* =================================================
-       QUICK CATEGORIES
-    ================================================= */
-
-    document
-        .querySelectorAll(
-            ".quick-category"
-        )
-        .forEach(
-            button => {
-
-                button.addEventListener(
-                    "click",
-                    function () {
-
-                        const category =
-                            this.dataset.category;
-
-                        selectCategory(
-                            category
-                        );
-
-                        scrollToExplore();
-                    }
-                );
-
-            }
-        );
-
-
-    /* =================================================
-       MAIN CATEGORIES
-    ================================================= */
-
-    document
-        .querySelectorAll(
-            ".category-card"
-        )
-        .forEach(
-            button => {
-
-                button.addEventListener(
-                    "click",
-                    function () {
-
-                        const category =
-                            this.dataset.category;
-
-                        selectCategory(
-                            category
-                        );
-
-                        scrollToExplore();
-                    }
-                );
-
-            }
-        );
-
-
-    /* =================================================
-       MOBILE MENU
-    ================================================= */
-
-    if (mobileMenuBtn) {
-
-        mobileMenuBtn.addEventListener(
-            "click",
-            openMobileMenu
-        );
-    }
-
-
-    if (closeMenu) {
-
-        closeMenu.addEventListener(
-            "click",
-            closeMobileMenu
-        );
-    }
-
-
-    document
-        .querySelectorAll(
-            ".mobile-menu a"
-        )
-        .forEach(
-            link => {
-
-                link.addEventListener(
-                    "click",
-                    closeMobileMenu
-                );
-
-            }
-        );
-
-
-    /* =================================================
-       ADD SHOP
-    ================================================= */
-
-    if (addShopBtn) {
-
-        addShopBtn.addEventListener(
-            "click",
-            function () {
-
-                alert(
-                    "ميزة إضافة المحل جاهزة للربط بقاعدة بيانات أو نموذج تسجيل."
-                );
-
-            }
-        );
-    }
-
-
-    /* =================================================
-       ESC
-    ================================================= */
-
-    document.addEventListener(
-        "keydown",
-        function (event) {
-
-            if (
-                event.key === "Escape"
-            ) {
-
-                closeMenuModal();
-
-                closeMobileMenu();
-            }
-
-        }
-    );
 }
 
 
 /* =====================================================
-   CATEGORY
+   CLEAR MARKERS
 ===================================================== */
 
-function selectCategory(category) {
+function clearMarkers() {
 
-    currentCategory =
-        CATEGORY_CONFIG[category]
-            ? category
-            : "all";
-
-
-    document
-        .querySelectorAll(
-            ".quick-category, .category-card, .legend-item"
-        )
-        .forEach(
-            button => {
-
-                button.classList.toggle(
-                    "active",
-                    button.dataset.category ===
-                        currentCategory
-                );
-
-            }
-        );
-
-
-    renderShops();
-
-    renderMapMarkers();
-
-    updateResultsCount();
-}
-
-
-/* =====================================================
-   FILTER
-   IMPORTANT:
-   عند وجود موقع المستخدم:
-   يتم ترتيب جميع المحلات بعد الفلترة
-   من الأقرب إلى الأبعد بغض النظر عن التصنيف.
-===================================================== */
-
-function getFilteredShops() {
-
-    let shops =
-        MANUAL_SHOPS.filter(
-            shop => {
-
-                const categoryMatch =
-                    currentCategory === "all" ||
-                    shop.category ===
-                        currentCategory;
-
-
-                const searchText =
-                    currentSearch
-                        .toLowerCase();
-
-
-                const searchableText = [
-
-                    shop.name || "",
-
-                    shop.categoryName || "",
-
-                    shop.address || ""
-
-                ]
-                    .join(" ")
-                    .toLowerCase();
-
-
-                const searchMatch =
-                    !searchText ||
-                    searchableText.includes(
-                        searchText
-                    );
-
-
-                const areaMatch =
-                    !currentArea ||
-                    searchableText.includes(
-                        currentArea.toLowerCase()
-                    );
-
-
-                return (
-                    categoryMatch &&
-                    searchMatch &&
-                    areaMatch
-                );
-            }
-        );
-
-
-    /*
-       =================================================
-       ترتيب حسب المسافة
-       =================================================
-
-       لا يتم ترتيب المطاعم وحدها أو الصيدليات وحدها.
-
-       جميع التصنيفات تدخل في نفس القائمة:
-
-       مطعم
-       صيدلية
-       حلويات
-       ماركت
-       مطعم
-       صيدلية
-       ...
-
-       ويتم ترتيبهم كلهم حسب المسافة.
-    */
-
-    if (userLocation) {
-
-        shops.forEach(
-            shop => {
-
-                if (
-                    typeof shop.lat === "number" &&
-                    typeof shop.lng === "number" &&
-                    Number.isFinite(shop.lat) &&
-                    Number.isFinite(shop.lng)
-                ) {
-
-                    shop.distance =
-                        calculateDistance(
-                            userLocation.lat,
-                            userLocation.lng,
-                            shop.lat,
-                            shop.lng
-                        );
-
-                } else {
-
-                    /*
-                       أي محل ليس لديه إحداثيات
-                       يوضع في نهاية القائمة.
-                    */
-
-                    shop.distance =
-                        Infinity;
-                }
-
-            }
-        );
-
-
-        shops.sort(
-            (a, b) => {
-
-                const distanceA =
-                    Number.isFinite(
-                        a.distance
-                    )
-                        ? a.distance
-                        : Infinity;
-
-
-                const distanceB =
-                    Number.isFinite(
-                        b.distance
-                    )
-                        ? b.distance
-                        : Infinity;
-
-
-                if (
-                    distanceA !==
-                    distanceB
-                ) {
-
-                    return (
-                        distanceA -
-                        distanceB
-                    );
-                }
-
-
-                /*
-                   في حالة تساوي المسافة
-                   نرتب بالاسم.
-                */
-
-                return String(
-                    a.name || ""
-                ).localeCompare(
-                    String(
-                        b.name || ""
-                    ),
-                    "ar"
-                );
-            }
-        );
-    }
-
-
-    return shops;
-}
-
-
-/* =====================================================
-   RESULTS COUNT
-===================================================== */
-
-function updateResultsCount() {
-
-    if (!resultsCount) {
+    if (!map) {
         return;
     }
 
+    markers.forEach(marker => {
 
-    resultsCount.textContent =
-        getFilteredShops().length;
+        map.removeLayer(marker);
+
+    });
+
+    markers = [];
+
 }
 
 
 /* =====================================================
-   RENDER SHOPS
+   CREATE MAP MARKER
 ===================================================== */
 
-function renderShops() {
+function addShopMarker(shop) {
 
-    if (!shopsGrid) {
+    if (!map) {
         return;
     }
 
+    const marker =
+        L.marker([
+            shop.lat,
+            shop.lng
+        ]).addTo(map);
 
-    const shops =
-        getFilteredShops();
 
+    let phoneHTML = "";
 
-    updateResultsCount();
+    if (shop.phone) {
 
+        phoneHTML = `
 
-    if (!shops.length) {
+            <a
+                href="tel:${escapeAttribute(shop.phone)}"
+                class="popup-button"
+            >
 
-        shopsGrid.innerHTML = `
+                <i class="fa-solid fa-phone"></i>
 
-            <div class="empty-state">
+                اتصال
 
-                <i class="fa-solid fa-store-slash"></i>
-
-                <h3>
-                    مفيش أماكن مطابقة
-                </h3>
-
-                <p>
-                    جرّب كلمة بحث مختلفة أو اختار تصنيف آخر.
-                </p>
-
-            </div>
+            </a>
 
         `;
 
-        return;
     }
 
 
-    shopsGrid.innerHTML =
-        shops
-            .map(createShopCard)
-            .join("");
-}
+    const directionsURL =
+        `https://www.google.com/maps/dir/?api=1&destination=${shop.lat},${shop.lng}`;
 
 
-/* =====================================================
-   SHOP CARD
-===================================================== */
-
-function createShopCard(shop) {
-
-    const category =
-        CATEGORY_CONFIG[
-            shop.category
-        ] ||
-        CATEGORY_CONFIG.all;
-
-
-    const distance =
-        getDistanceText(shop);
-
-
-    const phone =
-        shop.phone
-            ? normalizePhone(shop.phone)
-            : "";
-
-
-    const hasMenu =
-        shop.menu &&
-        typeof shop.menu === "object" &&
-        Object.keys(shop.menu).length > 0;
-
-
-    const hasLocation =
-        typeof shop.lat === "number" &&
-        typeof shop.lng === "number";
-
-
-    return `
-
-        <article
-            class="shop-card"
-            data-shop-id="${escapeHTML(shop.id)}"
-        >
-
-            <div
-                class="shop-image"
-                style="
-                    --placeholder-color:${escapeAttribute(category.color)};
-                "
-            >
-
-                <div class="shop-image-placeholder">
-
-                    <i class="${escapeAttribute(category.icon)}"></i>
-
-                </div>
-
-
-                <span
-                    class="shop-category"
-                    style="
-                        --category-color:${escapeAttribute(category.color)};
-                    "
-                >
-
-                    ${escapeHTML(
-                        shop.categoryName ||
-                        category.name
-                    )}
-
-                </span>
-
-
-                <span class="source-badge">
-                    محلات مصر
-                </span>
-
-            </div>
-
-
-            <div class="shop-info">
-
-                <h3>
-                    ${escapeHTML(shop.name)}
-                </h3>
-
-
-                <div class="shop-address">
-
-                    <i class="fa-solid fa-location-dot"></i>
-
-                    <span>
-
-                        ${escapeHTML(
-                            shop.address ||
-                            "العاشر من رمضان، الشرقية"
-                        )}
-
-                    </span>
-
-                </div>
-
-
-                <div class="shop-meta">
-
-                    <div
-                        class="rating"
-                        aria-label="التقييم"
-                    >
-
-                        <i class="fa-solid fa-star"></i>
-                        <i class="fa-solid fa-star"></i>
-                        <i class="fa-solid fa-star"></i>
-                        <i class="fa-solid fa-star"></i>
-                        <i class="fa-solid fa-star"></i>
-
-                    </div>
-
-
-                    ${
-                        distance
-                            ? `
-
-                                <span class="distance">
-                                    ${escapeHTML(distance)}
-                                </span>
-
-                              `
-                            : ""
-                    }
-
-                </div>
-
-
-                <div class="shop-actions">
-
-                    ${
-                        phone
-                            ? `
-
-                                <a
-                                    href="tel:${escapeAttribute(phone)}"
-                                    aria-label="الاتصال بـ ${escapeAttribute(shop.name)}"
-                                >
-
-                                    <i class="fa-solid fa-phone"></i>
-
-                                    اتصال
-
-                                </a>
-
-                              `
-                            : ""
-                    }
-
-
-                    ${
-                        hasLocation
-                            ? `
-
-                                <a
-                                    href="#"
-                                    onclick="openShopOnMap('${escapeAttribute(shop.id)}'); return false;"
-                                >
-
-                                    <i class="fa-solid fa-location-arrow"></i>
-
-                                    الخريطة
-
-                                </a>
-
-                              `
-                            : `
-
-                                <a
-                                    href="#"
-                                    onclick="locateShop('${escapeAttribute(shop.id)}'); return false;"
-                                >
-
-                                    <i class="fa-solid fa-location-dot"></i>
-
-                                    تحديد الموقع
-
-                                </a>
-
-                              `
-                    }
-
-
-                    ${
-                        hasMenu
-                            ? `
-
-                                <button
-                                    type="button"
-                                    class="menu-button"
-                                    onclick="openMenu('${escapeAttribute(shop.id)}')"
-                                >
-
-                                    <i class="fa-solid fa-utensils"></i>
-
-                                    المنيو
-
-                                </button>
-
-                              `
-                            : ""
-                    }
-
-                </div>
-
-            </div>
-
-        </article>
-
-    `;
-}
-
-
-/* =====================================================
-   MAP MARKERS
-===================================================== */
-
-function renderMapMarkers() {
-
-    if (
-        !map ||
-        !markersLayer
-    ) {
-        return;
-    }
-
-
-    markersLayer.clearLayers();
-
-
-    const shops =
-        getFilteredShops();
-
-
-    shops.forEach(
-        shop => {
-
-            if (
-                typeof shop.lat !== "number" ||
-                typeof shop.lng !== "number"
-            ) {
-                return;
-            }
-
-
-            const category =
-                CATEGORY_CONFIG[
-                    shop.category
-                ] ||
-                CATEGORY_CONFIG.all;
-
-
-            const icon =
-                L.divIcon({
-
-                    className:
-                        "category-map-marker-wrapper",
-
-                    html: `
-
-                        <div
-                            class="category-map-marker"
-                            style="
-                                background:${escapeAttribute(category.color)};
-                            "
-                        >
-
-                            <i class="${escapeAttribute(category.icon)}"></i>
-
-                        </div>
-
-                    `,
-
-                    iconSize: [
-                        42,
-                        42
-                    ],
-
-                    iconAnchor: [
-                        21,
-                        42
-                    ],
-
-                    popupAnchor: [
-                        0,
-                        -40
-                    ]
-                });
-
-
-            const marker =
-                L.marker(
-                    [
-                        shop.lat,
-                        shop.lng
-                    ],
-                    {
-                        icon
-                    }
-                );
-
-
-            marker.bindPopup(
-                createPopup(shop)
-            );
-
-
-            marker.on(
-                "click",
-                function () {
-
-                    map.setView(
-                        [
-                            shop.lat,
-                            shop.lng
-                        ],
-                        16,
-                        {
-                            animate: true
-                        }
-                    );
-
-                }
-            );
-
-
-            marker.addTo(
-                markersLayer
-            );
-        }
-    );
-
-
-    if (userLocation) {
-
-        renderUserLocation();
-    }
-}
-
-
-/* =====================================================
-   POPUP
-===================================================== */
-
-function createPopup(shop) {
-
-    const category =
-        CATEGORY_CONFIG[
-            shop.category
-        ] ||
-        CATEGORY_CONFIG.all;
-
-
-    const phone =
-        shop.phone
-            ? normalizePhone(shop.phone)
-            : "";
-
-
-    const hasMenu =
-        shop.menu &&
-        typeof shop.menu === "object" &&
-        Object.keys(shop.menu).length > 0;
-
-
-    return `
+    const popupHTML = `
 
         <div class="custom-popup">
 
@@ -1893,19 +190,9 @@ function createPopup(shop) {
             </div>
 
 
-            <div
-                class="popup-category"
-                style="
-                    color:${escapeAttribute(category.color)}
-                "
-            >
+            <div class="popup-category">
 
-                <i class="${escapeAttribute(category.icon)}"></i>
-
-                ${escapeHTML(
-                    shop.categoryName ||
-                    category.name
-                )}
+                ${escapeHTML(shop.categoryName)}
 
             </div>
 
@@ -1913,621 +200,702 @@ function createPopup(shop) {
             ${
                 shop.address
                     ? `
-
                         <div class="popup-address">
 
                             <i class="fa-solid fa-location-dot"></i>
 
-                            <span>
-                                ${escapeHTML(shop.address)}
-                            </span>
+                            ${escapeHTML(shop.address)}
 
                         </div>
-
-                      `
+                    `
                     : ""
             }
 
 
             ${
-                phone
+                shop.phone
                     ? `
-
                         <div class="popup-phone">
 
                             <i class="fa-solid fa-phone"></i>
 
-                            <span>
-                                ${escapeHTML(shop.phone)}
-                            </span>
+                            ${escapeHTML(shop.phone)}
 
                         </div>
-
-                      `
+                    `
                     : ""
             }
 
 
             <div class="popup-buttons">
 
-                ${
-                    phone
-                        ? `
-
-                            <a
-                                class="popup-button"
-                                href="tel:${escapeAttribute(phone)}"
-                            >
-                                اتصال
-                            </a>
-
-                          `
-                        : ""
-                }
+                ${phoneHTML}
 
 
-                <button
-                    type="button"
+                <a
+                    href="${directionsURL}"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     class="popup-button secondary"
-                    onclick="openShopOnMap('${escapeAttribute(shop.id)}')"
                 >
-                    الموقع
-                </button>
+
+                    <i class="fa-solid fa-route"></i>
+
+                    الاتجاهات
+
+                </a>
 
             </div>
-
-
-            ${
-                hasMenu
-                    ? `
-
-                        <div style="margin-top:8px;">
-
-                            <button
-                                type="button"
-                                class="popup-button"
-                                style="
-                                    width:100%;
-                                    border:0;
-                                    cursor:pointer;
-                                "
-                                onclick="openMenu('${escapeAttribute(shop.id)}')"
-                            >
-
-                                <i class="fa-solid fa-utensils"></i>
-
-                                عرض المنيو
-
-                            </button>
-
-                        </div>
-
-                      `
-                    : ""
-            }
 
         </div>
 
     `;
+
+
+    marker.bindPopup(popupHTML);
+
+    markers.push(marker);
+
 }
 
 
 /* =====================================================
-   OPEN SHOP ON MAP
+   SHOW MARKERS
 ===================================================== */
 
-window.openShopOnMap =
-    function (shopId) {
+function showMarkers(shopList) {
 
-        const shop =
-            MANUAL_SHOPS.find(
-                item =>
-                    item.id === shopId
-            );
+    clearMarkers();
 
+    shopList.forEach(shop => {
 
-        if (!shop) {
-            return;
-        }
+        addShopMarker(shop);
 
+    });
 
-        if (
-            typeof shop.lat !== "number" ||
-            typeof shop.lng !== "number"
-        ) {
-
-            locateShop(shopId);
-
-            return;
-        }
-
-
-        if (!map) {
-
-            alert(
-                "الخريطة غير متاحة حاليًا."
-            );
-
-            return;
-        }
-
-
-        map.setView(
-            [
-                shop.lat,
-                shop.lng
-            ],
-            17,
-            {
-                animate: true
-            }
-        );
-
-
-        setTimeout(
-            function () {
-
-                if (!markersLayer) {
-                    return;
-                }
-
-
-                markersLayer.eachLayer(
-                    marker => {
-
-                        if (
-                            typeof marker.getLatLng !==
-                                "function"
-                        ) {
-                            return;
-                        }
-
-
-                        const position =
-                            marker.getLatLng();
-
-
-                        if (
-                            Math.abs(
-                                position.lat -
-                                shop.lat
-                            ) < 0.000001 &&
-
-                            Math.abs(
-                                position.lng -
-                                shop.lng
-                            ) < 0.000001
-                        ) {
-
-                            marker.openPopup();
-                        }
-
-                    }
-                );
-
-            },
-            400
-        );
-
-
-        scrollToExplore();
-    };
-
-
-/* =====================================================
-   LOCATE SHOP
-===================================================== */
-
-window.locateShop =
-    async function (shopId) {
-
-        const shop =
-            MANUAL_SHOPS.find(
-                item =>
-                    item.id === shopId
-            );
-
-
-        if (!shop) {
-            return;
-        }
-
-
-        if (
-            typeof shop.lat === "number" &&
-            typeof shop.lng === "number"
-        ) {
-
-            openShopOnMap(shopId);
-
-            return;
-        }
-
-
-        if (!shop.address) {
-
-            alert(
-                "عنوان هذا المحل غير متوفر لتحديد موقعه."
-            );
-
-            return;
-        }
-
-
-        showMapLoading(
-            `جاري تحديد موقع ${shop.name}...`
-        );
-
-
-        try {
-
-            const result =
-                await geocodeShop(shop);
-
-
-            if (!result) {
-
-                hideMapLoading();
-
-                alert(
-                    "لم نتمكن من تحديد موقع هذا المحل من العنوان."
-                );
-
-                return;
-            }
-
-
-            shop.lat =
-                result.lat;
-
-            shop.lng =
-                result.lng;
-
-            shop.geocoded =
-                true;
-
-
-            /*
-               مهم:
-               بعد تحديد إحداثيات المحل
-               نحسب المسافة مرة أخرى.
-            */
-
-            if (userLocation) {
-
-                shop.distance =
-                    calculateDistance(
-                        userLocation.lat,
-                        userLocation.lng,
-                        shop.lat,
-                        shop.lng
-                    );
-            }
-
-
-            /*
-               إعادة رسم القائمة ستؤدي إلى
-               إعادة ترتيبها تلقائيًا حسب المسافة.
-            */
-
-            renderShops();
-
-            renderMapMarkers();
-
-
-            hideMapLoading();
-
-
-            if (map) {
-
-                map.setView(
-                    [
-                        shop.lat,
-                        shop.lng
-                    ],
-                    17,
-                    {
-                        animate: true
-                    }
-                );
-
-            }
-
-
-            setTimeout(
-                function () {
-
-                    openShopOnMap(
-                        shopId
-                    );
-
-                },
-                300
-            );
-
-        } catch (error) {
-
-            console.error(
-                "Locate shop error:",
-                error
-            );
-
-            hideMapLoading();
-
-            alert(
-                "حدث خطأ أثناء تحديد موقع المحل."
-            );
-        }
-    };
-
-
-/* =====================================================
-   USER LOCATION
-===================================================== */
-
-function getCurrentLocation() {
-
-    if (!navigator.geolocation) {
-
-        alert(
-            "المتصفح لا يدعم تحديد الموقع."
-        );
-
-        return;
-    }
-
-
-    showMapLoading(
-        "جاري تحديد موقعك..."
-    );
-
-
-    navigator.geolocation.getCurrentPosition(
-
-        function (position) {
-
-            const lat =
-                position.coords.latitude;
-
-            const lng =
-                position.coords.longitude;
-
-            const accuracy =
-                position.coords.accuracy;
-
-
-            userLocation = {
-
-                lat,
-
-                lng,
-
-                accuracy
-            };
-
-
-            /*
-               حساب المسافات لجميع المحلات
-               التي لديها إحداثيات.
-            */
-
-            calculateDistances();
-
-
-            renderUserLocation();
-
-
-            if (map) {
-
-                map.setView(
-                    [
-                        lat,
-                        lng
-                    ],
-                    14,
-                    {
-                        animate: true
-                    }
-                );
-            }
-
-
-            if (currentLocationText) {
-
-                currentLocationText.textContent =
-                    "تم تحديد موقعك الحالي";
-            }
-
-
-            hideMapLoading();
-
-
-            /*
-               renderShops()
-               سيستخدم getFilteredShops()
-               التي ترتب كل المحلات
-               من الأقرب للأبعد.
-            */
-
-            renderShops();
-
-            renderMapMarkers();
-
-        },
-
-
-        function (error) {
-
-            hideMapLoading();
-
-
-            let message =
-                "تعذر تحديد موقعك.";
-
-
-            if (
-                error.code === 1
-            ) {
-
-                message =
-                    "اسمح للموقع بالوصول إلى موقعك من إعدادات المتصفح.";
-
-            }
-
-
-            if (
-                error.code === 2
-            ) {
-
-                message =
-                    "تعذر العثور على موقعك حاليًا.";
-
-            }
-
-
-            if (
-                error.code === 3
-            ) {
-
-                message =
-                    "انتهت مهلة تحديد الموقع. حاول مرة أخرى.";
-
-            }
-
-
-            if (currentLocationText) {
-
-                currentLocationText.textContent =
-                    message;
-            }
-
-
-            alert(message);
-
-        },
-
-
-        {
-            enableHighAccuracy: true,
-
-            timeout: 15000,
-
-            maximumAge: 60000
-        }
-    );
 }
 
 
 /* =====================================================
-   RENDER USER LOCATION
+   OVERPASS QUERY
 ===================================================== */
 
-function renderUserLocation() {
+async function fetchNearbyPlaces(lat, lng) {
 
-    if (
-        !map ||
-        !userLocation
-    ) {
+    const query = `
+
+        [out:json][timeout:30];
+
+        (
+
+            nwr(
+                around:${SEARCH_RADIUS},
+                ${lat},
+                ${lng}
+            )["shop"];
+
+            nwr(
+                around:${SEARCH_RADIUS},
+                ${lat},
+                ${lng}
+            )["amenity"="restaurant"];
+
+            nwr(
+                around:${SEARCH_RADIUS},
+                ${lat},
+                ${lng}
+            )["amenity"="cafe"];
+
+            nwr(
+                around:${SEARCH_RADIUS},
+                ${lat},
+                ${lng}
+            )["amenity"="pharmacy"];
+
+        );
+
+        out center tags;
+
+    `;
+
+
+    const url =
+        OVERPASS_API +
+        "?data=" +
+        encodeURIComponent(query);
+
+
+    const response =
+        await fetch(url);
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            "Overpass API error: " +
+            response.status
+        );
+
+    }
+
+
+    const data =
+        await response.json();
+
+
+    return data.elements || [];
+
+}
+
+
+/* =====================================================
+   CONVERT OSM DATA
+===================================================== */
+
+function convertPlaces(elements) {
+
+    const result = [];
+
+
+    elements.forEach(element => {
+
+        const tags =
+            element.tags || {};
+
+
+        let lat =
+            element.lat;
+
+        let lng =
+            element.lon;
+
+
+        if (
+            lat === undefined &&
+            element.center
+        ) {
+
+            lat =
+                element.center.lat;
+
+            lng =
+                element.center.lon;
+
+        }
+
+
+        if (
+            lat === undefined ||
+            lng === undefined
+        ) {
+
+            return;
+
+        }
+
+
+        const name =
+            tags["name:ar"] ||
+            tags.name ||
+            tags["name:en"] ||
+            "مكان بدون اسم";
+
+
+        let category = "other";
+
+        let categoryName = "مكان";
+
+
+        /* SHOP */
+
+        if (tags.shop) {
+
+            category =
+                normalizeShopCategory(
+                    tags.shop
+                );
+
+            categoryName =
+                categoryNames[category] ||
+                "محل";
+
+        }
+
+
+        /* RESTAURANT */
+
+        if (
+            tags.amenity ===
+            "restaurant"
+        ) {
+
+            category =
+                "restaurant";
+
+            categoryName =
+                "مطعم";
+
+        }
+
+
+        /* CAFE */
+
+        if (
+            tags.amenity ===
+            "cafe"
+        ) {
+
+            category =
+                "cafe";
+
+            categoryName =
+                "كافيه";
+
+        }
+
+
+        /* PHARMACY */
+
+        if (
+            tags.amenity ===
+            "pharmacy"
+        ) {
+
+            category =
+                "pharmacy";
+
+            categoryName =
+                "صيدلية";
+
+        }
+
+
+        const phone =
+            tags.phone ||
+            tags["contact:phone"] ||
+            tags["contact:mobile"] ||
+            "";
+
+
+        const website =
+            tags.website ||
+            tags["contact:website"] ||
+            "";
+
+
+        const address =
+            buildAddress(tags);
+
+
+        const openingHours =
+            tags.opening_hours ||
+            "";
+
+
+        result.push({
+
+            id:
+                `${element.type}-${element.id}`,
+
+            name,
+
+            category,
+
+            categoryName,
+
+            lat: Number(lat),
+
+            lng: Number(lng),
+
+            phone,
+
+            website,
+
+            address,
+
+            openingHours,
+
+            image:
+                tags.image ||
+                null
+
+        });
+
+    });
+
+
+    return removeDuplicates(result);
+
+}
+
+
+/* =====================================================
+   NORMALIZE SHOP CATEGORIES
+===================================================== */
+
+function normalizeShopCategory(shopType) {
+
+    const types = {
+
+        supermarket: "market",
+
+        convenience: "market",
+
+        grocery: "market",
+
+        clothes: "shopping",
+
+        fashion: "shopping",
+
+        confectionery: "sweets",
+
+        bakery: "bakery",
+
+        butcher: "butcher",
+
+        greengrocer: "greengrocer",
+
+        electronics: "electronics",
+
+        mobile_phone: "mobile_phone",
+
+        shoes: "shoes",
+
+        jewelry: "jewelry",
+
+        furniture: "furniture",
+
+        cosmetics: "cosmetics",
+
+        books: "books",
+
+        sports: "sports",
+
+        department_store:
+            "department_store",
+
+        hairdresser:
+            "hairdresser"
+
+    };
+
+
+    return (
+        types[shopType] ||
+        shopType ||
+        "other"
+    );
+
+}
+
+
+/* =====================================================
+   ADDRESS
+===================================================== */
+
+function buildAddress(tags) {
+
+    const parts = [];
+
+
+    if (tags["addr:street"]) {
+
+        parts.push(
+            tags["addr:street"]
+        );
+
+    }
+
+
+    if (tags["addr:suburb"]) {
+
+        parts.push(
+            tags["addr:suburb"]
+        );
+
+    }
+
+
+    if (tags["addr:city"]) {
+
+        parts.push(
+            tags["addr:city"]
+        );
+
+    }
+
+
+    if (parts.length === 0) {
+
+        return "";
+
+    }
+
+
+    return parts.join(" - ");
+
+}
+
+
+/* =====================================================
+   REMOVE DUPLICATES
+===================================================== */
+
+function removeDuplicates(places) {
+
+    const seen =
+        new Set();
+
+
+    return places.filter(place => {
+
+        const key =
+            `${place.name}-${place.lat.toFixed(5)}-${place.lng.toFixed(5)}`;
+
+
+        if (seen.has(key)) {
+
+            return false;
+
+        }
+
+
+        seen.add(key);
+
+        return true;
+
+    });
+
+}
+
+
+/* =====================================================
+   RENDER SHOPS
+===================================================== */
+
+function renderShops(shopList) {
+
+    const grid =
+        document.getElementById(
+            "shopsGrid"
+        );
+
+
+    const count =
+        document.getElementById(
+            "resultsCount"
+        );
+
+
+    if (!grid || !count) {
         return;
     }
 
 
-    if (userMarker) {
-
-        map.removeLayer(
-            userMarker
-        );
-
-        userMarker = null;
-    }
+    count.textContent =
+        shopList.length;
 
 
-    if (accuracyCircle) {
-
-        map.removeLayer(
-            accuracyCircle
-        );
-
-        accuracyCircle = null;
-    }
+    grid.innerHTML = "";
 
 
-    userMarker =
-        L.circleMarker(
-            [
-                userLocation.lat,
-                userLocation.lng
-            ],
-            {
+    if (shopList.length === 0) {
 
-                radius: 9,
+        grid.innerHTML = `
 
-                fillColor: "#2563eb",
+            <div class="empty-state">
 
-                color: "#ffffff",
+                <i class="fa-solid fa-store-slash"></i>
 
-                weight: 4,
+                <h3>
+                    مفيش أماكن لحد دلوقتي
+                </h3>
 
-                fillOpacity: 1
-            }
-        )
-        .addTo(map);
-
-
-    userMarker.bindPopup(
-        `
-            <div
-                style="
-                    direction:rtl;
-                    text-align:right;
-                "
-            >
-
-                <strong>
-                    موقعك الحالي
-                </strong>
-
-                <br>
-
-                <small>
-                    هنا موقعك على الخريطة
-                </small>
+                <p>
+                    جرب البحث في منطقة أخرى
+                    أو اختار تصنيف مختلف.
+                </p>
 
             </div>
-        `
-    );
 
+        `;
 
-    if (
-        typeof userLocation.accuracy ===
-        "number" &&
-        Number.isFinite(
-            userLocation.accuracy
-        )
-    ) {
+        return;
 
-        accuracyCircle =
-            L.circle(
-                [
-                    userLocation.lat,
-                    userLocation.lng
-                ],
-                {
-
-                    radius:
-                        userLocation.accuracy,
-
-                    color: "#2563eb",
-
-                    fillColor: "#2563eb",
-
-                    fillOpacity: 0.08,
-
-                    weight: 1
-                }
-            )
-            .addTo(map);
     }
+
+
+    shopList
+        .slice(0, 30)
+        .forEach(shop => {
+
+            const card =
+                document.createElement(
+                    "article"
+                );
+
+
+            card.className =
+                "shop-card";
+
+
+            const phoneButton =
+                shop.phone
+                    ? `
+                        <a
+                            href="tel:${escapeAttribute(shop.phone)}"
+                        >
+
+                            <i class="fa-solid fa-phone"></i>
+
+                            اتصال
+
+                        </a>
+                      `
+                    : "";
+
+
+            const directions =
+                `https://www.google.com/maps/dir/?api=1&destination=${shop.lat},${shop.lng}`;
+
+
+            card.innerHTML = `
+
+                <div class="shop-image">
+
+                    ${
+                        shop.image
+                            ? `
+                                <img
+                                    src="${escapeAttribute(shop.image)}"
+                                    alt="${escapeAttribute(shop.name)}"
+                                    loading="lazy"
+                                >
+                              `
+                            : `
+                                <div class="shop-image-placeholder">
+
+                                    <i class="fa-solid fa-store"></i>
+
+                                </div>
+                              `
+                    }
+
+
+                    <span class="shop-category">
+
+                        ${escapeHTML(
+                            shop.categoryName
+                        )}
+
+                    </span>
+
+                </div>
+
+
+                <div class="shop-info">
+
+
+                    <h3>
+
+                        ${escapeHTML(
+                            shop.name
+                        )}
+
+                    </h3>
+
+
+                    ${
+                        shop.address
+                            ? `
+                                <div class="shop-address">
+
+                                    <i class="fa-solid fa-location-dot"></i>
+
+                                    <span>
+
+                                        ${escapeHTML(
+                                            shop.address
+                                        )}
+
+                                    </span>
+
+                                </div>
+                              `
+                            : ""
+                    }
+
+
+                    ${
+                        shop.phone
+                            ? `
+                                <div class="shop-address">
+
+                                    <i class="fa-solid fa-phone"></i>
+
+                                    <span>
+
+                                        ${escapeHTML(
+                                            shop.phone
+                                        )}
+
+                                    </span>
+
+                                </div>
+                              `
+                            : ""
+                    }
+
+
+                    <div class="shop-meta">
+
+                        <span class="rating">
+
+                            <i class="fa-solid fa-location-dot"></i>
+
+                            مكان قريب
+
+                        </span>
+
+
+                        <span class="distance">
+
+                            ${calculateDistanceText(shop)}
+
+                        </span>
+
+                    </div>
+
+
+                    <div class="shop-actions">
+
+                        ${phoneButton}
+
+
+                        <a
+                            href="${directions}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+
+                            <i class="fa-solid fa-route"></i>
+
+                            الاتجاهات
+
+                        </a>
+
+                    </div>
+
+
+                </div>
+
+            `;
+
+
+            grid.appendChild(card);
+
+        });
+
 }
 
 
@@ -2535,11 +903,47 @@ function renderUserLocation() {
    DISTANCE
 ===================================================== */
 
+function calculateDistanceText(shop) {
+
+    if (!currentLocation) {
+
+        return "";
+
+    }
+
+
+    const distance =
+        calculateDistance(
+            currentLocation.lat,
+            currentLocation.lng,
+            shop.lat,
+            shop.lng
+        );
+
+
+    if (distance < 1) {
+
+        return `${Math.round(
+            distance * 1000
+        )} متر`;
+
+    }
+
+
+    return `${distance.toFixed(1)} كم`;
+
+}
+
+
+/* =====================================================
+   DISTANCE CALCULATION
+===================================================== */
+
 function calculateDistance(
     lat1,
-    lng1,
+    lon1,
     lat2,
-    lng2
+    lon2
 ) {
 
     const R = 6371;
@@ -2551,35 +955,33 @@ function calculateDistance(
         );
 
 
-    const dLng =
+    const dLon =
         toRadians(
-            lng2 - lng1
+            lon2 - lon1
         );
 
 
     const a =
 
-        Math.sin(
-            dLat / 2
-        ) *
-        Math.sin(
-            dLat / 2
-        ) +
+        Math.sin(dLat / 2) *
+        Math.sin(dLat / 2)
+
+        +
 
         Math.cos(
             toRadians(lat1)
-        ) *
+        )
+
+        *
 
         Math.cos(
             toRadians(lat2)
-        ) *
+        )
 
-        Math.sin(
-            dLng / 2
-        ) *
-        Math.sin(
-            dLng / 2
-        );
+        *
+
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
 
 
     const c =
@@ -2591,235 +993,470 @@ function calculateDistance(
 
 
     return R * c;
+
 }
 
 
-function getDistanceText(shop) {
+function toRadians(degrees) {
 
-    if (!userLocation) {
-        return "";
-    }
+    return degrees *
+        Math.PI /
+        180;
 
-
-    if (
-        typeof shop.lat !== "number" ||
-        typeof shop.lng !== "number"
-    ) {
-        return "";
-    }
-
-
-    const distance =
-        calculateDistance(
-            userLocation.lat,
-            userLocation.lng,
-            shop.lat,
-            shop.lng
-        );
-
-
-    if (
-        distance < 1
-    ) {
-
-        return `${Math.round(
-            distance * 1000
-        )} متر`;
-
-    }
-
-
-    return `${distance.toFixed(1)} كم`;
-}
-
-
-function calculateDistances() {
-
-    MANUAL_SHOPS.forEach(
-        shop => {
-
-            if (
-                userLocation &&
-                typeof shop.lat === "number" &&
-                typeof shop.lng === "number" &&
-                Number.isFinite(shop.lat) &&
-                Number.isFinite(shop.lng)
-            ) {
-
-                shop.distance =
-                    calculateDistance(
-                        userLocation.lat,
-                        userLocation.lng,
-                        shop.lat,
-                        shop.lng
-                    );
-
-            } else {
-
-                shop.distance =
-                    Infinity;
-            }
-
-        }
-    );
 }
 
 
 /* =====================================================
-   AREA SEARCH
+   FILTER SHOPS
+===================================================== */
+
+function filterShops() {
+
+    const input =
+        document.getElementById(
+            "searchInput"
+        );
+
+
+    if (!input) {
+        return;
+    }
+
+
+    const search =
+        input.value
+            .trim()
+            .toLowerCase();
+
+
+    const filtered =
+        allShops.filter(shop => {
+
+            const matchesCategory =
+
+                currentCategory ===
+                "all"
+
+                ||
+
+                shop.category ===
+                currentCategory;
+
+
+            const text =
+
+                `${shop.name}
+                 ${shop.categoryName}
+                 ${shop.address}`
+                    .toLowerCase();
+
+
+            const matchesSearch =
+
+                search === ""
+
+                ||
+
+                text.includes(search);
+
+
+            return (
+                matchesCategory &&
+                matchesSearch
+            );
+
+        });
+
+
+    renderShops(filtered);
+
+    showMarkers(filtered);
+
+}
+
+
+/* =====================================================
+   LOAD LOCATION
+===================================================== */
+
+function loadUserLocation() {
+
+    if (!navigator.geolocation) {
+
+        alert(
+            "المتصفح لا يدعم تحديد الموقع."
+        );
+
+        return;
+
+    }
+
+
+    if (!map) {
+
+        alert(
+            "الخريطة لم يتم تحميلها بعد. حاول مرة أخرى."
+        );
+
+        return;
+
+    }
+
+
+    const button =
+        document.getElementById(
+            "locationBtn"
+        );
+
+
+    if (!button) {
+        return;
+    }
+
+
+    button.disabled = true;
+
+
+    button.innerHTML = `
+
+        <i class="fa-solid fa-spinner fa-spin"></i>
+
+        جاري تحديد الموقع...
+
+    `;
+
+
+    showLoading();
+
+
+    navigator.geolocation.getCurrentPosition(
+
+        async function(position) {
+
+            const lat =
+                position.coords.latitude;
+
+            const lng =
+                position.coords.longitude;
+
+
+            currentLocation = {
+                lat: lat,
+                lng: lng
+            };
+
+
+            map.setView(
+                [lat, lng],
+                15
+            );
+
+
+            if (userMarker) {
+
+                map.removeLayer(
+                    userMarker
+                );
+
+            }
+
+
+            userMarker =
+                L.marker([
+                    lat,
+                    lng
+                ])
+                .addTo(map)
+                .bindPopup("أنت هنا")
+                .openPopup();
+
+
+            const locationText =
+                document.getElementById(
+                    "currentLocationText"
+                );
+
+
+            if (locationText) {
+
+                locationText.textContent =
+                    "تم تحديد موقعك الحالي";
+
+            }
+
+
+            try {
+
+                const elements =
+                    await fetchNearbyPlaces(
+                        lat,
+                        lng
+                    );
+
+
+                allShops =
+                    convertPlaces(
+                        elements
+                    );
+
+
+                filterShops();
+
+
+            } catch (error) {
+
+                console.error(
+                    "Nearby places error:",
+                    error
+                );
+
+
+                alert(
+                    "تم تحديد موقعك، لكن حدثت مشكلة أثناء تحميل الأماكن القريبة."
+                );
+
+            }
+
+
+            hideLoading();
+
+
+            button.disabled = false;
+
+
+            button.innerHTML = `
+
+                <i class="fa-solid fa-location-crosshairs"></i>
+
+                تم تحديد موقعي
+
+            `;
+
+        },
+
+
+        function(error) {
+
+            console.error(
+                "Geolocation error:",
+                error
+            );
+
+
+            hideLoading();
+
+
+            button.disabled = false;
+
+
+            button.innerHTML = `
+
+                <i class="fa-solid fa-location-crosshairs"></i>
+
+                موقعي الحالي
+
+            `;
+
+
+            let message =
+                "لم نتمكن من تحديد موقعك.";
+
+
+            if (
+                error.code ===
+                error.PERMISSION_DENIED
+            ) {
+
+                message =
+                    "تم رفض إذن الموقع. اسمح للموقع بالوصول إلى موقعك من إعدادات المتصفح ثم حاول مرة أخرى.";
+
+            }
+
+
+            else if (
+                error.code ===
+                error.POSITION_UNAVAILABLE
+            ) {
+
+                message =
+                    "تعذر تحديد موقعك. تأكد من تشغيل خدمة الموقع (GPS) ثم حاول مرة أخرى.";
+
+            }
+
+
+            else if (
+                error.code ===
+                error.TIMEOUT
+            ) {
+
+                message =
+                    "انتهى وقت تحديد الموقع. تأكد من تشغيل GPS وحاول مرة أخرى.";
+
+            }
+
+
+            alert(message);
+
+        },
+
+
+        {
+
+            enableHighAccuracy: true,
+
+            timeout: 20000,
+
+            maximumAge: 0
+
+        }
+
+    );
+
+}
+
+
+/* =====================================================
+   SEARCH AREA
 ===================================================== */
 
 async function searchArea() {
 
-    if (!areaInput) {
+    const input =
+        document.getElementById(
+            "areaInput"
+        );
+
+
+    if (!input) {
         return;
     }
 
 
     const area =
-        areaInput.value.trim();
+        input.value.trim();
 
 
     if (!area) {
 
-        currentArea = "";
-
-
-        if (currentLocationText) {
-
-            currentLocationText.textContent =
-                "العاشر من رمضان، الشرقية";
-        }
-
-
-        renderShops();
-
-        renderMapMarkers();
+        alert(
+            "اكتب اسم المنطقة أولًا."
+        );
 
         return;
+
     }
 
 
-    currentArea =
-        area;
-
-
-    showMapLoading(
-        "جاري البحث عن المنطقة..."
-    );
+    showLoading();
 
 
     try {
 
-        const params =
-            new URLSearchParams({
-
-                q:
-                    `${area}, الشرقية، مصر`,
-
-                format:
-                    "json",
-
-                limit:
-                    "1",
-
-                "accept-language":
-                    "ar"
-            });
-
-
-        const response =
-            await fetch(
-                `${CONFIG.nominatimUrl}?${params.toString()}`,
-                {
-
-                    headers: {
-
-                        "Accept":
-                            "application/json"
-                    }
-                }
+        const location =
+            await geocodeArea(
+                area
             );
 
 
-        if (!response.ok) {
-
-            throw new Error(
-                `Geocoding failed: HTTP ${response.status}`
-            );
-        }
-
-
-        const data =
-            await response.json();
-
-
-        if (
-            !Array.isArray(data) ||
-            !data.length
-        ) {
-
-            hideMapLoading();
-
+        if (!location) {
 
             alert(
-                "لم يتم العثور على المنطقة. جرّب اسم منطقة أو مدينة أخرى."
+                "لم نتمكن من العثور على المنطقة."
             );
 
+            hideLoading();
+
             return;
+
         }
 
 
         const lat =
-            parseFloat(
-                data[0].lat
-            );
-
+            location.lat;
 
         const lng =
-            parseFloat(
-                data[0].lon
+            location.lng;
+
+
+        currentLocation = {
+            lat,
+            lng
+        };
+
+
+        map.setView(
+            [lat, lng],
+            14
+        );
+
+
+        const locationText =
+            document.getElementById(
+                "currentLocationText"
             );
 
 
-        if (
-            !Number.isFinite(lat) ||
-            !Number.isFinite(lng)
-        ) {
+        if (locationText) {
 
-            throw new Error(
-                "Invalid coordinates"
+            locationText.textContent =
+                `الموقع: ${location.name}`;
+
+        }
+
+
+        if (userMarker) {
+
+            map.removeLayer(
+                userMarker
             );
+
         }
 
 
-        if (map) {
-
-            map.setView(
-                [
-                    lat,
-                    lng
-                ],
-                14,
-                {
-                    animate: true
-                }
+        userMarker =
+            L.marker([
+                lat,
+                lng
+            ])
+            .addTo(map)
+            .bindPopup(
+                location.name
             );
+
+
+        const elements =
+            await fetchNearbyPlaces(
+                lat,
+                lng
+            );
+
+
+        allShops =
+            convertPlaces(
+                elements
+            );
+
+
+        currentCategory =
+            "all";
+
+
+        const searchInput =
+            document.getElementById(
+                "searchInput"
+            );
+
+
+        if (searchInput) {
+
+            searchInput.value = "";
+
         }
 
 
-        if (currentLocationText) {
+        updateActiveCategory();
 
-            currentLocationText.textContent =
-                `المنطقة: ${area}`;
-        }
-
-
-        renderShops();
-
-        renderMapMarkers();
-
-        hideMapLoading();
+        filterShops();
 
     } catch (error) {
 
@@ -2829,237 +1466,50 @@ async function searchArea() {
         );
 
 
-        hideMapLoading();
-
-
-        /*
-           حتى لو لم نقدر نحدد المنطقة على الخريطة،
-           البحث في أسماء وعناوين المحلات يظل شغال.
-        */
-
-        renderShops();
-
-        renderMapMarkers();
-
-
         alert(
-            "تم البحث في بيانات المحلات، لكن تعذر تحديد المنطقة على الخريطة."
+            "حدث خطأ أثناء البحث عن المنطقة."
         );
+
     }
+
+
+    hideLoading();
+
 }
 
 
 /* =====================================================
-   GEOCODING SHOPS
+   GEOCODING
 ===================================================== */
 
-async function startGeocoding() {
+async function geocodeArea(area) {
 
-    if (geocodingInProgress) {
-        return;
-    }
+    const url =
+        "https://nominatim.openstreetmap.org/search" +
 
+        "?format=json" +
 
-    geocodingInProgress = true;
+        "&limit=1" +
 
+        "&countrycodes=eg" +
 
-    const shopsWithoutCoordinates =
-        MANUAL_SHOPS.filter(
-            shop =>
+        "&accept-language=ar" +
 
-                typeof shop.lat !==
-                    "number" ||
+        "&q=" +
 
-                typeof shop.lng !==
-                    "number"
-        );
-
-
-    if (!shopsWithoutCoordinates.length) {
-
-        geocodingInProgress =
-            false;
-
-        hideMapLoading();
-
-        /*
-           حتى لو كل الإحداثيات موجودة،
-           نعيد الحساب والترتيب.
-        */
-
-        if (userLocation) {
-            calculateDistances();
-        }
-
-        renderShops();
-        renderMapMarkers();
-
-        return;
-    }
-
-
-    showMapLoading(
-        "جاري تحديد مواقع المحلات..."
-    );
-
-
-    for (
-        let i = 0;
-        i < shopsWithoutCoordinates.length;
-        i++
-    ) {
-
-        const shop =
-            shopsWithoutCoordinates[i];
-
-
-        try {
-
-            updateLoadingText(
-                `جاري تحديد مواقع المحلات... ${i + 1}/${shopsWithoutCoordinates.length}`
-            );
-
-
-            const result =
-                await geocodeShop(shop);
-
-
-            if (result) {
-
-                shop.lat =
-                    result.lat;
-
-                shop.lng =
-                    result.lng;
-
-                shop.geocoded =
-                    true;
-
-
-                /*
-                   لو المستخدم محدد موقعه،
-                   نحسب مسافة المحل الجديد فورًا.
-                */
-
-                if (userLocation) {
-
-                    shop.distance =
-                        calculateDistance(
-                            userLocation.lat,
-                            userLocation.lng,
-                            shop.lat,
-                            shop.lng
-                        );
-                }
-
-
-                /*
-                   getFilteredShops()
-                   سيعيد ترتيب القائمة
-                   تلقائيًا بعد كل إحداثية جديدة.
-                */
-
-                renderMapMarkers();
-
-                renderShops();
-            }
-
-        } catch (error) {
-
-            console.warn(
-                "Geocoding error:",
-                shop.name,
-                error
-            );
-
-        }
-
-
-        /*
-           Nominatim لديه سياسة استخدام
-           لذلك ننتظر بين الطلبات.
-        */
-
-        await sleep(
-            CONFIG.geocodeDelay
-        );
-    }
-
-
-    geocodingInProgress =
-        false;
-
-
-    hideMapLoading();
-
-
-    /*
-       تحديث نهائي للمسافات والترتيب.
-    */
-
-    if (userLocation) {
-
-        calculateDistances();
-    }
-
-
-    renderMapMarkers();
-
-    renderShops();
-}
-
-
-/* =====================================================
-   GEOCODE SINGLE SHOP
-===================================================== */
-
-async function geocodeShop(shop) {
-
-    if (!shop || !shop.address) {
-        return null;
-    }
-
-
-    const query =
-        `${shop.address}, مصر`;
-
-
-    const params =
-        new URLSearchParams({
-
-            q:
-                query,
-
-            format:
-                "json",
-
-            limit:
-                "1",
-
-            "accept-language":
-                "ar"
-        });
+        encodeURIComponent(area);
 
 
     const response =
-        await fetch(
-            `${CONFIG.nominatimUrl}?${params.toString()}`,
-            {
-
-                headers: {
-
-                    "Accept":
-                        "application/json"
-                }
-            }
-        );
+        await fetch(url);
 
 
     if (!response.ok) {
 
         throw new Error(
-            `HTTP ${response.status}`
+            "Geocoding failed"
         );
+
     }
 
 
@@ -3067,414 +1517,189 @@ async function geocodeShop(shop) {
         await response.json();
 
 
-    if (
-        !Array.isArray(data) ||
-        !data.length
-    ) {
+    if (!data.length) {
+
         return null;
-    }
 
-
-    const lat =
-        parseFloat(
-            data[0].lat
-        );
-
-
-    const lng =
-        parseFloat(
-            data[0].lon
-        );
-
-
-    if (
-        !Number.isFinite(lat) ||
-        !Number.isFinite(lng)
-    ) {
-        return null;
     }
 
 
     return {
-        lat,
-        lng
+
+        lat:
+            parseFloat(
+                data[0].lat
+            ),
+
+        lng:
+            parseFloat(
+                data[0].lon
+            ),
+
+        name:
+            data[0].display_name
+
     };
+
 }
 
 
 /* =====================================================
-   LEGEND
+   CATEGORY BUTTONS
 ===================================================== */
 
-function renderLegend() {
+function setupCategoryButtons() {
 
-    const legendGrid =
-        document.getElementById(
-            "legendGrid"
+    const buttons =
+        document.querySelectorAll(
+            ".quick-category, .category-card"
         );
 
 
-    if (!legendGrid) {
+    buttons.forEach(button => {
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                currentCategory =
+                    button.dataset.category;
+
+
+                updateActiveCategory();
+
+                filterShops();
+
+
+                const explore =
+                    document.getElementById(
+                        "explore"
+                    );
+
+
+                if (explore) {
+
+                    explore.scrollIntoView({
+                        behavior: "smooth"
+                    });
+
+                }
+
+            }
+        );
+
+    });
+
+}
+
+
+/* =====================================================
+   ACTIVE CATEGORY
+===================================================== */
+
+function updateActiveCategory() {
+
+    document
+        .querySelectorAll(
+            ".quick-category"
+        )
+        .forEach(button => {
+
+            button.classList.remove(
+                "active"
+            );
+
+
+            if (
+                button.dataset.category ===
+                currentCategory
+            ) {
+
+                button.classList.add(
+                    "active"
+                );
+
+            }
+
+        });
+
+}
+
+
+/* =====================================================
+   SEARCH INPUT
+===================================================== */
+
+function setupSearch() {
+
+    const input =
+        document.getElementById(
+            "searchInput"
+        );
+
+
+    if (!input) {
         return;
     }
 
 
-    const categories =
-        Object.entries(
-            CATEGORY_CONFIG
-        )
-        .filter(
-            ([key]) =>
-                key !== "all"
-        );
+    input.addEventListener(
+        "input",
+        () => {
 
+            filterShops();
 
-    legendGrid.innerHTML =
-        categories
-            .map(
-                ([key, category]) => `
+        }
+    );
 
-                    <button
-                        type="button"
-                        class="legend-item"
-                        data-category="${escapeAttribute(key)}"
-                        onclick="selectCategory('${escapeAttribute(key)}')"
-                    >
-
-                        <span
-                            class="legend-dot"
-                            style="
-                                background:${escapeAttribute(category.color)};
-                            "
-                        ></span>
-
-
-                        <i
-                            class="${escapeAttribute(category.icon)}"
-                            style="
-                                color:${escapeAttribute(category.color)};
-                            "
-                        ></i>
-
-
-                        <span>
-                            ${escapeHTML(category.name)}
-                        </span>
-
-                    </button>
-
-                `
-            )
-            .join("");
 }
 
 
 /* =====================================================
-   MENU MODAL
+   SHOW ALL
 ===================================================== */
 
-window.openMenu =
-    function (shopId) {
+function setupShowAll() {
 
-        const shop =
-            MANUAL_SHOPS.find(
-                item =>
-                    item.id === shopId
-            );
-
-
-        if (!shop) {
-            return;
-        }
-
-
-        if (
-            !shop.menu ||
-            typeof shop.menu !== "object" ||
-            !Object.keys(shop.menu).length
-        ) {
-
-            alert(
-                "المنيو الخاصة بهذا المحل غير مضافة حاليًا."
-            );
-
-            return;
-        }
-
-
-        removeExistingMenuModal();
-
-
-        const modal =
-            document.createElement(
-                "div"
-            );
-
-
-        modal.className =
-            "menu-modal active";
-
-
-        modal.id =
-            "menuModal";
-
-
-        modal.innerHTML = `
-
-            <div
-                class="menu-modal-backdrop"
-                onclick="closeMenuModal()"
-            ></div>
-
-
-            <div
-                class="menu-modal-card"
-                role="dialog"
-                aria-modal="true"
-                aria-label="منيو ${escapeAttribute(shop.name)}"
-            >
-
-                <button
-                    type="button"
-                    class="menu-modal-close"
-                    onclick="closeMenuModal()"
-                    aria-label="إغلاق"
-                >
-
-                    <i class="fa-solid fa-xmark"></i>
-
-                </button>
-
-
-                <div class="menu-modal-head">
-
-                    <span class="small-label">
-                        قائمة الطعام
-                    </span>
-
-
-                    <h3>
-                        ${escapeHTML(shop.name)}
-                    </h3>
-
-
-                    ${
-                        shop.address
-                            ? `
-
-                                <p
-                                    style="
-                                        color:#64748b;
-                                        margin-top:6px;
-                                        font-size:13px;
-                                    "
-                                >
-
-                                    <i
-                                        class="fa-solid fa-location-dot"
-                                    ></i>
-
-                                    ${escapeHTML(shop.address)}
-
-                                </p>
-
-                              `
-                            : ""
-                    }
-
-                </div>
-
-
-                <div class="menu-content">
-
-                    ${renderMenuContent(shop)}
-
-                </div>
-
-            </div>
-
-        `;
-
-
-        document.body.appendChild(
-            modal
-        );
-
-
-        document.body.classList.add(
-            "menu-open"
-        );
-    };
-
-
-/* =====================================================
-   RENDER MENU
-===================================================== */
-
-function renderMenuContent(shop) {
-
-    if (
-        !shop ||
-        !shop.menu ||
-        typeof shop.menu !== "object"
-    ) {
-        return "";
-    }
-
-
-    const categories =
-        Object.entries(
-            shop.menu
-        );
-
-
-    return categories
-        .map(
-            ([categoryName, items]) => `
-
-                <section class="menu-category">
-
-                    <h4>
-                        ${escapeHTML(categoryName)}
-                    </h4>
-
-
-                    <div class="menu-items">
-
-                        ${
-                            Array.isArray(items)
-                                ? items
-                                    .map(
-                                        item => `
-
-                                            <div class="menu-item">
-
-                                                <div>
-
-                                                    <strong>
-                                                        ${escapeHTML(
-                                                            item.name || ""
-                                                        )}
-                                                    </strong>
-
-
-                                                    ${
-                                                        item.description
-                                                            ? `
-
-                                                                <p>
-                                                                    ${escapeHTML(
-                                                                        item.description
-                                                                    )}
-                                                                </p>
-
-                                                              `
-                                                            : ""
-                                                    }
-
-                                                </div>
-
-
-                                                ${
-                                                    item.price
-                                                        ? `
-
-                                                            <span>
-                                                                ${escapeHTML(
-                                                                    item.price
-                                                                )}
-                                                            </span>
-
-                                                          `
-                                                        : ""
-                                                }
-
-                                            </div>
-
-                                        `
-                                    )
-                                    .join("")
-                                : ""
-                        }
-
-                    </div>
-
-                </section>
-
-            `
-        )
-        .join("") +
-
-        (
-            shop.menuUrl
-                ? `
-
-                    <a
-                        class="menu-external-link"
-                        href="${escapeAttribute(shop.menuUrl)}"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-
-                        <i
-                            class="fa-solid fa-arrow-up-right-from-square"
-                        ></i>
-
-                        فتح المنيو على طلبات
-
-                    </a>
-
-
-                    <p class="menu-note">
-
-                        الأسعار والمنتجات المعروضة
-                        يمكن أن تتغير من وقت لآخر.
-
-                    </p>
-
-                  `
-                : ""
-        );
-}
-
-
-/* =====================================================
-   CLOSE MENU
-===================================================== */
-
-window.closeMenuModal =
-    function () {
-
-        const modal =
-            document.getElementById(
-                "menuModal"
-            );
-
-
-        if (modal) {
-
-            modal.remove();
-        }
-
-
-        document.body.classList.remove(
-            "menu-open"
-        );
-    };
-
-
-function removeExistingMenuModal() {
-
-    const existing =
+    const button =
         document.getElementById(
-            "menuModal"
+            "showAllBtn"
         );
 
 
-    if (existing) {
-
-        existing.remove();
+    if (!button) {
+        return;
     }
+
+
+    button.addEventListener(
+        "click",
+        () => {
+
+            currentCategory =
+                "all";
+
+
+            const searchInput =
+                document.getElementById(
+                    "searchInput"
+                );
+
+
+            if (searchInput) {
+
+                searchInput.value = "";
+
+            }
+
+
+            updateActiveCategory();
+
+            filterShops();
+
+        }
+    );
+
 }
 
 
@@ -3482,93 +1707,188 @@ function removeExistingMenuModal() {
    MOBILE MENU
 ===================================================== */
 
-function openMobileMenu() {
+function setupMobileMenu() {
 
-    if (!mobileMenu) {
+    const menu =
+        document.getElementById(
+            "mobileMenu"
+        );
+
+
+    const open =
+        document.getElementById(
+            "mobileMenuBtn"
+        );
+
+
+    const close =
+        document.getElementById(
+            "closeMenu"
+        );
+
+
+    if (!menu || !open || !close) {
         return;
     }
 
 
-    mobileMenu.classList.add(
-        "active"
+    open.addEventListener(
+        "click",
+        () => {
+
+            menu.classList.add(
+                "active"
+            );
+
+        }
     );
 
 
-    document.body.style.overflow =
-        "hidden";
-}
+    close.addEventListener(
+        "click",
+        () => {
 
+            menu.classList.remove(
+                "active"
+            );
 
-function closeMobileMenu() {
-
-    if (!mobileMenu) {
-        return;
-    }
-
-
-    mobileMenu.classList.remove(
-        "active"
+        }
     );
 
 
-    document.body.style.overflow =
-        "";
+    menu
+        .querySelectorAll("a")
+        .forEach(link => {
+
+            link.addEventListener(
+                "click",
+                () => {
+
+                    menu.classList.remove(
+                        "active"
+                    );
+
+                }
+            );
+
+        });
+
 }
 
 
 /* =====================================================
-   HELPERS
+   AREA SEARCH BUTTON
 ===================================================== */
 
-function normalizePhone(phone) {
+function setupAreaSearch() {
 
-    if (!phone) {
-        return "";
+    const button =
+        document.getElementById(
+            "areaSearchBtn"
+        );
+
+
+    const input =
+        document.getElementById(
+            "areaInput"
+        );
+
+
+    if (!button || !input) {
+        return;
     }
 
 
-    let value =
-        String(phone)
-            .trim()
-            .replace(/\s+/g, "");
+    button.addEventListener(
+        "click",
+        searchArea
+    );
 
 
-    /*
-       أرقام مصر المحلية:
-       010...
-       011...
-       012...
-       015...
-    */
+    input.addEventListener(
+        "keydown",
+        event => {
 
-    if (
-        /^01\d{9}$/.test(value)
-    ) {
+            if (
+                event.key ===
+                "Enter"
+            ) {
 
-        return `+20${value.substring(1)}`;
+                searchArea();
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   LOCATION BUTTON
+===================================================== */
+
+function setupLocationButton() {
+
+    const button =
+        document.getElementById(
+            "locationBtn"
+        );
+
+
+    if (!button) {
+
+        console.error(
+            "locationBtn not found."
+        );
+
+        return;
+
     }
 
 
-    /*
-       أرقام أرضية مثل:
-       055...
-    */
+    button.addEventListener(
+        "click",
+        function(event) {
 
-    if (
-        /^0\d{9,10}$/.test(value)
-    ) {
+            event.preventDefault();
 
-        return value;
+            loadUserLocation();
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   ADD SHOP
+===================================================== */
+
+function setupAddShop() {
+
+    const button =
+        document.getElementById(
+            "addShopBtn"
+        );
+
+
+    if (!button) {
+        return;
     }
 
 
-    /*
-       أرقام مختصرة مثل:
-       15761
-       19019
-    */
+    button.addEventListener(
+        "click",
+        () => {
 
-    return value;
+            alert(
+                "صفحة إضافة المحل سيتم ربطها بقاعدة البيانات في المرحلة التالية."
+            );
+
+        }
+    );
+
 }
 
 
@@ -3577,14 +1897,6 @@ function normalizePhone(phone) {
 ===================================================== */
 
 function escapeHTML(value) {
-
-    if (
-        value === null ||
-        value === undefined
-    ) {
-        return "";
-    }
-
 
     return String(value)
 
@@ -3612,228 +1924,42 @@ function escapeHTML(value) {
             /'/g,
             "&#039;"
         );
+
 }
 
 
 function escapeAttribute(value) {
 
-    return escapeHTML(value)
-        .replace(
-            /`/g,
-            "&#096;"
-        );
+    return escapeHTML(value);
+
 }
 
 
 /* =====================================================
-   DEBOUNCE
+   INITIALIZATION
 ===================================================== */
 
-function debounce(
-    callback,
-    delay
-) {
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
 
-    let timeout;
+        initializeMap();
 
+        setupCategoryButtons();
 
-    return function (...args) {
+        setupSearch();
 
-        clearTimeout(timeout);
+        setupShowAll();
 
+        setupMobileMenu();
 
-        timeout =
-            setTimeout(
-                () =>
-                    callback.apply(
-                        this,
-                        args
-                    ),
-                delay
-            );
-    };
-}
+        setupAreaSearch();
 
+        setupLocationButton();
 
-/* =====================================================
-   SLEEP
-===================================================== */
+        setupAddShop();
 
-function sleep(ms) {
+        updateActiveCategory();
 
-    return new Promise(
-        resolve =>
-            setTimeout(
-                resolve,
-                ms
-            )
-    );
-}
-
-
-/* =====================================================
-   RADIANS
-===================================================== */
-
-function toRadians(degrees) {
-
-    return (
-        degrees *
-        Math.PI /
-        180
-    );
-}
-
-
-/* =====================================================
-   SCROLL
-===================================================== */
-
-function scrollToExplore() {
-
-    const section =
-        document.getElementById(
-            "explore"
-        );
-
-
-    if (!section) {
-        return;
     }
-
-
-    section.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-    });
-}
-
-
-/* =====================================================
-   LOADING
-===================================================== */
-
-function showMapLoading(text) {
-
-    if (!mapLoading) {
-        return;
-    }
-
-
-    mapLoading.classList.remove(
-        "hidden"
-    );
-
-
-    if (loadingText) {
-
-        loadingText.textContent =
-            text ||
-            "جاري التحميل...";
-    }
-}
-
-
-function hideMapLoading() {
-
-    if (!mapLoading) {
-        return;
-    }
-
-
-    mapLoading.classList.add(
-        "hidden"
-    );
-}
-
-
-function updateLoadingText(text) {
-
-    if (loadingText) {
-
-        loadingText.textContent =
-            text;
-    }
-}
-
-
-/* =====================================================
-   SAFETY / DATA VALIDATION
-===================================================== */
-
-function validateShopData() {
-
-    const ids =
-        new Set();
-
-
-    MANUAL_SHOPS.forEach(
-        shop => {
-
-            if (!shop.id) {
-
-                console.warn(
-                    "Shop without ID:",
-                    shop
-                );
-
-                return;
-            }
-
-
-            if (ids.has(shop.id)) {
-
-                console.warn(
-                    "Duplicate shop ID:",
-                    shop.id
-                );
-
-            }
-
-
-            ids.add(shop.id);
-
-
-            if (
-                shop.category &&
-                !CATEGORY_CONFIG[shop.category]
-            ) {
-
-                console.warn(
-                    "Unknown shop category:",
-                    shop.name,
-                    shop.category
-                );
-
-            }
-
-
-            if (
-                shop.lat !== undefined &&
-                (
-                    typeof shop.lat !== "number" ||
-                    !Number.isFinite(shop.lat)
-                )
-            ) {
-
-                delete shop.lat;
-            }
-
-
-            if (
-                shop.lng !== undefined &&
-                (
-                    typeof shop.lng !== "number" ||
-                    !Number.isFinite(shop.lng)
-                )
-            ) {
-
-                delete shop.lng;
-            }
-
-        }
-    );
-}
-
-
-validateShopData();
+);
