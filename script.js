@@ -58,27 +58,44 @@ const categoryNames = {
 
 function initializeMap() {
 
-    const mapElement = document.getElementById("map");
+    const mapElement =
+        document.getElementById("map");
+
 
     if (!mapElement) {
-        console.error("Map element not found.");
+
+        console.error(
+            "Map element not found."
+        );
+
         return;
+
     }
+
 
     if (typeof L === "undefined") {
-        console.error("Leaflet has not loaded.");
+
+        console.error(
+            "Leaflet has not loaded."
+        );
+
         return;
+
     }
 
-    map = L.map("map").setView(
-        [30.5877, 31.5020],
-        13
-    );
+
+    map =
+        L.map("map").setView(
+            [30.5877, 31.5020],
+            13
+        );
+
 
     L.tileLayer(
         "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
         {
             maxZoom: 19,
+
             attribution:
                 '&copy; OpenStreetMap contributors'
         }
@@ -94,10 +111,17 @@ function initializeMap() {
 function showLoading() {
 
     const loading =
-        document.getElementById("mapLoading");
+        document.getElementById(
+            "mapLoading"
+        );
+
 
     if (loading) {
-        loading.classList.remove("hidden");
+
+        loading.classList.remove(
+            "hidden"
+        );
+
     }
 
 }
@@ -106,10 +130,17 @@ function showLoading() {
 function hideLoading() {
 
     const loading =
-        document.getElementById("mapLoading");
+        document.getElementById(
+            "mapLoading"
+        );
+
 
     if (loading) {
-        loading.classList.add("hidden");
+
+        loading.classList.add(
+            "hidden"
+        );
+
     }
 
 }
@@ -125,11 +156,13 @@ function clearMarkers() {
         return;
     }
 
+
     markers.forEach(marker => {
 
         map.removeLayer(marker);
 
     });
+
 
     markers = [];
 
@@ -146,7 +179,6 @@ function addShopMarker(shop) {
         return;
     }
 
-    /* الدبوس العادي الافتراضي */
 
     const marker =
         L.marker([
@@ -156,6 +188,7 @@ function addShopMarker(shop) {
 
 
     let phoneHTML = "";
+
 
     if (shop.phone) {
 
@@ -254,7 +287,10 @@ function addShopMarker(shop) {
     `;
 
 
-    marker.bindPopup(popupHTML);
+    marker.bindPopup(
+        popupHTML
+    );
+
 
     markers.push(marker);
 
@@ -269,6 +305,7 @@ function showMarkers(shopList) {
 
     clearMarkers();
 
+
     shopList.forEach(shop => {
 
         addShopMarker(shop);
@@ -282,11 +319,14 @@ function showMarkers(shopList) {
    OVERPASS QUERY
 ===================================================== */
 
-async function fetchNearbyPlaces(lat, lng) {
+async function fetchNearbyPlaces(
+    lat,
+    lng
+) {
 
     const query = `
 
-        [out:json][timeout:60];
+        [out:json][timeout:30];
 
         (
 
@@ -294,7 +334,25 @@ async function fetchNearbyPlaces(lat, lng) {
                 around:${SEARCH_RADIUS},
                 ${lat},
                 ${lng}
-            )["name"];
+            )["shop"]["name"];
+
+            nwr(
+                around:${SEARCH_RADIUS},
+                ${lat},
+                ${lng}
+            )["amenity"="restaurant"]["name"];
+
+            nwr(
+                around:${SEARCH_RADIUS},
+                ${lat},
+                ${lng}
+            )["amenity"="cafe"]["name"];
+
+            nwr(
+                around:${SEARCH_RADIUS},
+                ${lat},
+                ${lng}
+            )["amenity"="pharmacy"]["name"];
 
         );
 
@@ -378,11 +436,31 @@ function convertPlaces(elements) {
         }
 
 
+        /* =================================================
+           NAME
+        ================================================= */
+
         const name =
             tags["name:ar"] ||
             tags.name ||
             tags["name:en"] ||
-            "مكان بدون اسم";
+            "";
+
+
+        /*
+         * تجاهل أي عنصر ليس له اسم حقيقي.
+         * هذا يمنع ظهور المناطق أو الأماكن
+         * المجهولة داخل قائمة المحلات.
+         */
+
+        if (
+            !name ||
+            !name.trim()
+        ) {
+
+            return;
+
+        }
 
 
         let category = "other";
@@ -390,7 +468,9 @@ function convertPlaces(elements) {
         let categoryName = "مكان";
 
 
-        /* SHOP */
+        /* =================================================
+           SHOP
+        ================================================= */
 
         if (tags.shop) {
 
@@ -399,6 +479,7 @@ function convertPlaces(elements) {
                     tags.shop
                 );
 
+
             categoryName =
                 categoryNames[category] ||
                 "محل";
@@ -406,7 +487,9 @@ function convertPlaces(elements) {
         }
 
 
-        /* RESTAURANT */
+        /* =================================================
+           RESTAURANT
+        ================================================= */
 
         if (
             tags.amenity ===
@@ -422,7 +505,9 @@ function convertPlaces(elements) {
         }
 
 
-        /* CAFE */
+        /* =================================================
+           CAFE
+        ================================================= */
 
         if (
             tags.amenity ===
@@ -438,7 +523,9 @@ function convertPlaces(elements) {
         }
 
 
-        /* PHARMACY */
+        /* =================================================
+           PHARMACY
+        ================================================= */
 
         if (
             tags.amenity ===
@@ -454,85 +541,9 @@ function convertPlaces(elements) {
         }
 
 
-        /* FAST FOOD */
-
-        if (
-            tags.amenity ===
-            "fast_food"
-        ) {
-
-            category =
-                "restaurant";
-
-            categoryName =
-                "مطعم";
-
-        }
-
-
-        /* BAKERY */
-
-        if (
-            tags.shop ===
-            "bakery"
-        ) {
-
-            category =
-                "bakery";
-
-            categoryName =
-                "مخبز";
-
-        }
-
-
-        /* BUTCHER */
-
-        if (
-            tags.shop ===
-            "butcher"
-        ) {
-
-            category =
-                "butcher";
-
-            categoryName =
-                "جزارة";
-
-        }
-
-
-        /* HAIRDRESSER */
-
-        if (
-            tags.shop ===
-            "hairdresser"
-        ) {
-
-            category =
-                "hairdresser";
-
-            categoryName =
-                "حلاق / كوافير";
-
-        }
-
-
-        /* SUPERMARKET */
-
-        if (
-            tags.shop ===
-            "supermarket"
-        ) {
-
-            category =
-                "market";
-
-            categoryName =
-                "سوبر ماركت";
-
-        }
-
+        /* =================================================
+           PHONE
+        ================================================= */
 
         const phone =
             tags.phone ||
@@ -541,20 +552,36 @@ function convertPlaces(elements) {
             "";
 
 
+        /* =================================================
+           WEBSITE
+        ================================================= */
+
         const website =
             tags.website ||
             tags["contact:website"] ||
             "";
 
 
+        /* =================================================
+           ADDRESS
+        ================================================= */
+
         const address =
             buildAddress(tags);
 
+
+        /* =================================================
+           OPENING HOURS
+        ================================================= */
 
         const openingHours =
             tags.opening_hours ||
             "";
 
+
+        /* =================================================
+           ADD RESULT
+        ================================================= */
 
         result.push({
 
@@ -590,7 +617,9 @@ function convertPlaces(elements) {
     });
 
 
-    return removeDuplicates(result);
+    return removeDuplicates(
+        result
+    );
 
 }
 
@@ -599,7 +628,9 @@ function convertPlaces(elements) {
    NORMALIZE SHOP CATEGORIES
 ===================================================== */
 
-function normalizeShopCategory(shopType) {
+function normalizeShopCategory(
+    shopType
+) {
 
     const types = {
 
@@ -610,9 +641,6 @@ function normalizeShopCategory(shopType) {
             "market",
 
         grocery:
-            "market",
-
-        general:
             "market",
 
         clothes:
@@ -718,7 +746,9 @@ function buildAddress(tags) {
     }
 
 
-    return parts.join(" - ");
+    return parts.join(
+        " - "
+    );
 
 }
 
@@ -727,7 +757,9 @@ function buildAddress(tags) {
    REMOVE DUPLICATES
 ===================================================== */
 
-function removeDuplicates(places) {
+function removeDuplicates(
+    places
+) {
 
     const seen =
         new Set();
@@ -759,7 +791,9 @@ function removeDuplicates(places) {
    RENDER SHOPS
 ===================================================== */
 
-function renderShops(shopList) {
+function renderShops(
+    shopList
+) {
 
     const grid =
         document.getElementById(
@@ -978,7 +1012,9 @@ function renderShops(shopList) {
             `;
 
 
-            grid.appendChild(card);
+            grid.appendChild(
+                card
+            );
 
         });
 
@@ -989,7 +1025,9 @@ function renderShops(shopList) {
    DISTANCE
 ===================================================== */
 
-function calculateDistanceText(shop) {
+function calculateDistanceText(
+    shop
+) {
 
     if (!currentLocation) {
 
@@ -1083,7 +1121,9 @@ function calculateDistance(
 }
 
 
-function toRadians(degrees) {
+function toRadians(
+    degrees
+) {
 
     return degrees *
         Math.PI /
@@ -1143,7 +1183,9 @@ function filterShops() {
 
                 ||
 
-                text.includes(search);
+                text.includes(
+                    search
+                );
 
 
             return (
@@ -1154,9 +1196,14 @@ function filterShops() {
         });
 
 
-    renderShops(filtered);
+    renderShops(
+        filtered
+    );
 
-    showMarkers(filtered);
+
+    showMarkers(
+        filtered
+    );
 
 }
 
@@ -1227,8 +1274,11 @@ function loadUserLocation() {
 
 
             currentLocation = {
+
                 lat: lat,
+
                 lng: lng
+
             };
 
 
@@ -1253,7 +1303,9 @@ function loadUserLocation() {
                     lng
                 ])
                 .addTo(map)
-                .bindPopup("أنت هنا")
+                .bindPopup(
+                    "أنت هنا"
+                )
                 .openPopup();
 
 
@@ -1388,11 +1440,14 @@ function loadUserLocation() {
 
         {
 
-            enableHighAccuracy: true,
+            enableHighAccuracy:
+                true,
 
-            timeout: 20000,
+            timeout:
+                20000,
 
-            maximumAge: 0
+            maximumAge:
+                0
 
         }
 
@@ -1465,8 +1520,11 @@ async function searchArea() {
 
 
         currentLocation = {
+
             lat,
+
             lng
+
         };
 
 
@@ -1568,7 +1626,9 @@ async function searchArea() {
    GEOCODING
 ===================================================== */
 
-async function geocodeArea(area) {
+async function geocodeArea(
+    area
+) {
 
     const url =
         "https://nominatim.openstreetmap.org/search" +
@@ -1666,7 +1726,10 @@ function setupCategoryButtons() {
                 if (explore) {
 
                     explore.scrollIntoView({
-                        behavior: "smooth"
+
+                        behavior:
+                            "smooth"
+
                     });
 
                 }
@@ -1813,8 +1876,14 @@ function setupMobileMenu() {
         );
 
 
-    if (!menu || !open || !close) {
+    if (
+        !menu ||
+        !open ||
+        !close
+    ) {
+
         return;
+
     }
 
 
@@ -1880,8 +1949,13 @@ function setupAreaSearch() {
         );
 
 
-    if (!button || !input) {
+    if (
+        !button ||
+        !input
+    ) {
+
         return;
+
     }
 
 
@@ -1982,7 +2056,9 @@ function setupAddShop() {
    ESCAPE HTML
 ===================================================== */
 
-function escapeHTML(value) {
+function escapeHTML(
+    value
+) {
 
     return String(value)
 
@@ -2014,7 +2090,9 @@ function escapeHTML(value) {
 }
 
 
-function escapeAttribute(value) {
+function escapeAttribute(
+    value
+) {
 
     return escapeHTML(value);
 
