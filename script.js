@@ -146,6 +146,8 @@ function addShopMarker(shop) {
         return;
     }
 
+    /* الدبوس العادي الافتراضي */
+
     const marker =
         L.marker([
             shop.lat,
@@ -284,7 +286,7 @@ async function fetchNearbyPlaces(lat, lng) {
 
     const query = `
 
-        [out:json][timeout:30];
+        [out:json][timeout:60];
 
         (
 
@@ -292,25 +294,7 @@ async function fetchNearbyPlaces(lat, lng) {
                 around:${SEARCH_RADIUS},
                 ${lat},
                 ${lng}
-            )["shop"];
-
-            nwr(
-                around:${SEARCH_RADIUS},
-                ${lat},
-                ${lng}
-            )["amenity"="restaurant"];
-
-            nwr(
-                around:${SEARCH_RADIUS},
-                ${lat},
-                ${lng}
-            )["amenity"="cafe"];
-
-            nwr(
-                around:${SEARCH_RADIUS},
-                ${lat},
-                ${lng}
-            )["amenity"="pharmacy"];
+            )["name"];
 
         );
 
@@ -470,6 +454,86 @@ function convertPlaces(elements) {
         }
 
 
+        /* FAST FOOD */
+
+        if (
+            tags.amenity ===
+            "fast_food"
+        ) {
+
+            category =
+                "restaurant";
+
+            categoryName =
+                "مطعم";
+
+        }
+
+
+        /* BAKERY */
+
+        if (
+            tags.shop ===
+            "bakery"
+        ) {
+
+            category =
+                "bakery";
+
+            categoryName =
+                "مخبز";
+
+        }
+
+
+        /* BUTCHER */
+
+        if (
+            tags.shop ===
+            "butcher"
+        ) {
+
+            category =
+                "butcher";
+
+            categoryName =
+                "جزارة";
+
+        }
+
+
+        /* HAIRDRESSER */
+
+        if (
+            tags.shop ===
+            "hairdresser"
+        ) {
+
+            category =
+                "hairdresser";
+
+            categoryName =
+                "حلاق / كوافير";
+
+        }
+
+
+        /* SUPERMARKET */
+
+        if (
+            tags.shop ===
+            "supermarket"
+        ) {
+
+            category =
+                "market";
+
+            categoryName =
+                "سوبر ماركت";
+
+        }
+
+
         const phone =
             tags.phone ||
             tags["contact:phone"] ||
@@ -503,9 +567,11 @@ function convertPlaces(elements) {
 
             categoryName,
 
-            lat: Number(lat),
+            lat:
+                Number(lat),
 
-            lng: Number(lng),
+            lng:
+                Number(lng),
 
             phone,
 
@@ -537,39 +603,59 @@ function normalizeShopCategory(shopType) {
 
     const types = {
 
-        supermarket: "market",
+        supermarket:
+            "market",
 
-        convenience: "market",
+        convenience:
+            "market",
 
-        grocery: "market",
+        grocery:
+            "market",
 
-        clothes: "shopping",
+        general:
+            "market",
 
-        fashion: "shopping",
+        clothes:
+            "shopping",
 
-        confectionery: "sweets",
+        fashion:
+            "shopping",
 
-        bakery: "bakery",
+        confectionery:
+            "sweets",
 
-        butcher: "butcher",
+        bakery:
+            "bakery",
 
-        greengrocer: "greengrocer",
+        butcher:
+            "butcher",
 
-        electronics: "electronics",
+        greengrocer:
+            "greengrocer",
 
-        mobile_phone: "mobile_phone",
+        electronics:
+            "electronics",
 
-        shoes: "shoes",
+        mobile_phone:
+            "mobile_phone",
 
-        jewelry: "jewelry",
+        shoes:
+            "shoes",
 
-        furniture: "furniture",
+        jewelry:
+            "jewelry",
 
-        cosmetics: "cosmetics",
+        furniture:
+            "furniture",
 
-        books: "books",
+        cosmetics:
+            "cosmetics",
 
-        sports: "sports",
+        books:
+            "books",
+
+        sports:
+            "sports",
 
         department_store:
             "department_store",
