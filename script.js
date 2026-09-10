@@ -53,6 +53,129 @@ const categoryNames = {
 
 
 /* =====================================================
+   CATEGORY MARKER STYLE
+===================================================== */
+
+const categoryMarker = {
+
+    restaurant: {
+        color: "#ef4444",
+        icon: "fa-utensils"
+    },
+
+    sweets: {
+        color: "#ec4899",
+        icon: "fa-cake-candles"
+    },
+
+    market: {
+        color: "#16a34a",
+        icon: "fa-cart-shopping"
+    },
+
+    shopping: {
+        color: "#2563eb",
+        icon: "fa-shirt"
+    },
+
+    cafe: {
+        color: "#92400e",
+        icon: "fa-mug-hot"
+    },
+
+    pharmacy: {
+        color: "#0891b2",
+        icon: "fa-prescription-bottle-medical"
+    },
+
+    bakery: {
+        color: "#d97706",
+        icon: "fa-bread-slice"
+    },
+
+    butcher: {
+        color: "#dc2626",
+        icon: "fa-drumstick-bite"
+    },
+
+    greengrocer: {
+        color: "#65a30d",
+        icon: "fa-apple-whole"
+    },
+
+    electronics: {
+        color: "#4f46e5",
+        icon: "fa-tv"
+    },
+
+    mobile_phone: {
+        color: "#7c3aed",
+        icon: "fa-mobile-screen-button"
+    },
+
+    shoes: {
+        color: "#0f766e",
+        icon: "fa-shoe-prints"
+    },
+
+    jewelry: {
+        color: "#ca8a04",
+        icon: "fa-gem"
+    },
+
+    furniture: {
+        color: "#78350f",
+        icon: "fa-couch"
+    },
+
+    cosmetics: {
+        color: "#db2777",
+        icon: "fa-spray-can-sparkles"
+    },
+
+    books: {
+        color: "#4338ca",
+        icon: "fa-book"
+    },
+
+    sports: {
+        color: "#ea580c",
+        icon: "fa-futbol"
+    },
+
+    department_store: {
+        color: "#1e40af",
+        icon: "fa-building"
+    },
+
+    hairdresser: {
+        color: "#be185d",
+        icon: "fa-scissors"
+    },
+
+    other: {
+        color: "#64748b",
+        icon: "fa-store"
+    }
+
+};
+
+
+/* =====================================================
+   GET CATEGORY MARKER
+===================================================== */
+
+function getCategoryMarker(category) {
+
+    return (
+        categoryMarker[category] ||
+        categoryMarker.other
+    );
+
+}
+
+
+/* =====================================================
    INITIALIZE MAP
 ===================================================== */
 
@@ -60,7 +183,6 @@ function initializeMap() {
 
     const mapElement =
         document.getElementById("map");
-
 
     if (!mapElement) {
 
@@ -72,7 +194,6 @@ function initializeMap() {
 
     }
 
-
     if (typeof L === "undefined") {
 
         console.error(
@@ -83,19 +204,16 @@ function initializeMap() {
 
     }
 
-
-    map =
-        L.map("map").setView(
-            [30.5877, 31.5020],
-            13
-        );
+    map = L.map("map").setView(
+        [30.5877, 31.5020],
+        13
+    );
 
 
     L.tileLayer(
         "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
         {
             maxZoom: 19,
-
             attribution:
                 '&copy; OpenStreetMap contributors'
         }
@@ -111,16 +229,11 @@ function initializeMap() {
 function showLoading() {
 
     const loading =
-        document.getElementById(
-            "mapLoading"
-        );
-
+        document.getElementById("mapLoading");
 
     if (loading) {
 
-        loading.classList.remove(
-            "hidden"
-        );
+        loading.classList.remove("hidden");
 
     }
 
@@ -130,16 +243,11 @@ function showLoading() {
 function hideLoading() {
 
     const loading =
-        document.getElementById(
-            "mapLoading"
-        );
-
+        document.getElementById("mapLoading");
 
     if (loading) {
 
-        loading.classList.add(
-            "hidden"
-        );
+        loading.classList.add("hidden");
 
     }
 
@@ -153,9 +261,10 @@ function hideLoading() {
 function clearMarkers() {
 
     if (!map) {
-        return;
-    }
 
+        return;
+
+    }
 
     markers.forEach(marker => {
 
@@ -163,8 +272,64 @@ function clearMarkers() {
 
     });
 
-
     markers = [];
+
+}
+
+
+/* =====================================================
+   CREATE CATEGORY MARKER
+===================================================== */
+
+function createCategoryMarker(shop) {
+
+    const style =
+        getCategoryMarker(
+            shop.category
+        );
+
+
+    return L.divIcon({
+
+        className:
+            "custom-category-marker",
+
+        html: `
+
+            <div
+                class="category-marker-pin"
+                style="--marker-color:${style.color};"
+            >
+
+                <i
+                    class="fa-solid ${style.icon}"
+                ></i>
+
+            </div>
+
+            <div
+                class="category-marker-point"
+                style="--marker-color:${style.color};"
+            ></div>
+
+        `,
+
+        iconSize: [
+            44,
+            52
+        ],
+
+        iconAnchor: [
+            22,
+            52
+        ],
+
+        popupAnchor: [
+            0,
+            -48
+        ]
+
+    });
 
 }
 
@@ -176,15 +341,26 @@ function clearMarkers() {
 function addShopMarker(shop) {
 
     if (!map) {
+
         return;
+
     }
 
 
     const marker =
-        L.marker([
-            shop.lat,
-            shop.lng
-        ]).addTo(map);
+        L.marker(
+            [
+                shop.lat,
+                shop.lng
+            ],
+            {
+                icon:
+                    createCategoryMarker(shop),
+
+                riseOnHover:
+                    true
+            }
+        ).addTo(map);
 
 
     let phoneHTML = "";
@@ -214,18 +390,40 @@ function addShopMarker(shop) {
         `https://www.google.com/maps/dir/?api=1&destination=${shop.lat},${shop.lng}`;
 
 
+    const style =
+        getCategoryMarker(
+            shop.category
+        );
+
+
     const popupHTML = `
 
         <div class="custom-popup">
 
-            <div class="popup-title">
+            <div
+                class="popup-title"
+            >
+
+                <span
+                    class="popup-category-icon"
+                    style="color:${style.color};"
+                >
+
+                    <i
+                        class="fa-solid ${style.icon}"
+                    ></i>
+
+                </span>
 
                 ${escapeHTML(shop.name)}
 
             </div>
 
 
-            <div class="popup-category">
+            <div
+                class="popup-category"
+                style="color:${style.color};"
+            >
 
                 ${escapeHTML(shop.categoryName)}
 
@@ -235,6 +433,7 @@ function addShopMarker(shop) {
             ${
                 shop.address
                     ? `
+
                         <div class="popup-address">
 
                             <i class="fa-solid fa-location-dot"></i>
@@ -242,6 +441,7 @@ function addShopMarker(shop) {
                             ${escapeHTML(shop.address)}
 
                         </div>
+
                     `
                     : ""
             }
@@ -250,6 +450,7 @@ function addShopMarker(shop) {
             ${
                 shop.phone
                     ? `
+
                         <div class="popup-phone">
 
                             <i class="fa-solid fa-phone"></i>
@@ -257,6 +458,7 @@ function addShopMarker(shop) {
                             ${escapeHTML(shop.phone)}
 
                         </div>
+
                     `
                     : ""
             }
@@ -334,25 +536,25 @@ async function fetchNearbyPlaces(
                 around:${SEARCH_RADIUS},
                 ${lat},
                 ${lng}
-            )["shop"]["name"];
+            )["shop"];
 
             nwr(
                 around:${SEARCH_RADIUS},
                 ${lat},
                 ${lng}
-            )["amenity"="restaurant"]["name"];
+            )["amenity"="restaurant"];
 
             nwr(
                 around:${SEARCH_RADIUS},
                 ${lat},
                 ${lng}
-            )["amenity"="cafe"]["name"];
+            )["amenity"="cafe"];
 
             nwr(
                 around:${SEARCH_RADIUS},
                 ${lat},
                 ${lng}
-            )["amenity"="pharmacy"]["name"];
+            )["amenity"="pharmacy"];
 
         );
 
@@ -436,9 +638,11 @@ function convertPlaces(elements) {
         }
 
 
-        /* =================================================
-           NAME
-        ================================================= */
+        /*
+         * IMPORTANT:
+         * لا نستخدم رقم الـOSM كاسم.
+         * لو المكان ليس له اسم حقيقي نتجاهله.
+         */
 
         const name =
             tags["name:ar"] ||
@@ -448,29 +652,25 @@ function convertPlaces(elements) {
 
 
         /*
-         * تجاهل أي عنصر ليس له اسم حقيقي.
-         * هذا يمنع ظهور المناطق أو الأماكن
-         * المجهولة داخل قائمة المحلات.
+         * الأماكن بدون اسم لا تظهر
+         * كمحل برقم أو ID.
          */
 
-        if (
-            !name ||
-            !name.trim()
-        ) {
+        if (!name.trim()) {
 
             return;
 
         }
 
 
-        let category = "other";
+        let category =
+            "other";
 
-        let categoryName = "مكان";
+        let categoryName =
+            "مكان";
 
 
-        /* =================================================
-           SHOP
-        ================================================= */
+        /* SHOP */
 
         if (tags.shop) {
 
@@ -487,9 +687,7 @@ function convertPlaces(elements) {
         }
 
 
-        /* =================================================
-           RESTAURANT
-        ================================================= */
+        /* RESTAURANT */
 
         if (
             tags.amenity ===
@@ -505,9 +703,7 @@ function convertPlaces(elements) {
         }
 
 
-        /* =================================================
-           CAFE
-        ================================================= */
+        /* CAFE */
 
         if (
             tags.amenity ===
@@ -523,9 +719,7 @@ function convertPlaces(elements) {
         }
 
 
-        /* =================================================
-           PHARMACY
-        ================================================= */
+        /* PHARMACY */
 
         if (
             tags.amenity ===
@@ -541,10 +735,6 @@ function convertPlaces(elements) {
         }
 
 
-        /* =================================================
-           PHONE
-        ================================================= */
-
         const phone =
             tags.phone ||
             tags["contact:phone"] ||
@@ -552,36 +742,20 @@ function convertPlaces(elements) {
             "";
 
 
-        /* =================================================
-           WEBSITE
-        ================================================= */
-
         const website =
             tags.website ||
             tags["contact:website"] ||
             "";
 
 
-        /* =================================================
-           ADDRESS
-        ================================================= */
-
         const address =
             buildAddress(tags);
 
-
-        /* =================================================
-           OPENING HOURS
-        ================================================= */
 
         const openingHours =
             tags.opening_hours ||
             "";
 
-
-        /* =================================================
-           ADD RESULT
-        ================================================= */
 
         result.push({
 
@@ -617,9 +791,7 @@ function convertPlaces(elements) {
     });
 
 
-    return removeDuplicates(
-        result
-    );
+    return removeDuplicates(result);
 
 }
 
@@ -746,9 +918,7 @@ function buildAddress(tags) {
     }
 
 
-    return parts.join(
-        " - "
-    );
+    return parts.join(" - ");
 
 }
 
@@ -757,9 +927,7 @@ function buildAddress(tags) {
    REMOVE DUPLICATES
 ===================================================== */
 
-function removeDuplicates(
-    places
-) {
+function removeDuplicates(places) {
 
     const seen =
         new Set();
@@ -791,9 +959,7 @@ function removeDuplicates(
    RENDER SHOPS
 ===================================================== */
 
-function renderShops(
-    shopList
-) {
+function renderShops(shopList) {
 
     const grid =
         document.getElementById(
@@ -808,7 +974,9 @@ function renderShops(
 
 
     if (!grid || !count) {
+
         return;
+
     }
 
 
@@ -862,6 +1030,7 @@ function renderShops(
             const phoneButton =
                 shop.phone
                     ? `
+
                         <a
                             href="tel:${escapeAttribute(shop.phone)}"
                         >
@@ -871,12 +1040,19 @@ function renderShops(
                             اتصال
 
                         </a>
+
                       `
                     : "";
 
 
             const directions =
                 `https://www.google.com/maps/dir/?api=1&destination=${shop.lat},${shop.lng}`;
+
+
+            const style =
+                getCategoryMarker(
+                    shop.category
+                );
 
 
             card.innerHTML = `
@@ -886,23 +1062,41 @@ function renderShops(
                     ${
                         shop.image
                             ? `
+
                                 <img
                                     src="${escapeAttribute(shop.image)}"
                                     alt="${escapeAttribute(shop.name)}"
                                     loading="lazy"
                                 >
+
                               `
                             : `
-                                <div class="shop-image-placeholder">
 
-                                    <i class="fa-solid fa-store"></i>
+                                <div
+                                    class="shop-image-placeholder"
+                                    style="
+                                        color:${style.color};
+                                        background:#f8fafc;
+                                    "
+                                >
+
+                                    <i
+                                        class="fa-solid ${style.icon}"
+                                    ></i>
 
                                 </div>
+
                               `
                     }
 
 
-                    <span class="shop-category">
+                    <span
+                        class="shop-category"
+                        style="
+                            color:${style.color};
+                            border:1px solid ${style.color};
+                        "
+                    >
 
                         ${escapeHTML(
                             shop.categoryName
@@ -928,6 +1122,7 @@ function renderShops(
                     ${
                         shop.address
                             ? `
+
                                 <div class="shop-address">
 
                                     <i class="fa-solid fa-location-dot"></i>
@@ -941,6 +1136,7 @@ function renderShops(
                                     </span>
 
                                 </div>
+
                               `
                             : ""
                     }
@@ -949,6 +1145,7 @@ function renderShops(
                     ${
                         shop.phone
                             ? `
+
                                 <div class="shop-address">
 
                                     <i class="fa-solid fa-phone"></i>
@@ -962,6 +1159,7 @@ function renderShops(
                                     </span>
 
                                 </div>
+
                               `
                             : ""
                     }
@@ -969,11 +1167,18 @@ function renderShops(
 
                     <div class="shop-meta">
 
-                        <span class="rating">
+                        <span
+                            class="rating"
+                            style="color:${style.color};"
+                        >
 
-                            <i class="fa-solid fa-location-dot"></i>
+                            <i
+                                class="fa-solid ${style.icon}"
+                            ></i>
 
-                            مكان قريب
+                            ${escapeHTML(
+                                shop.categoryName
+                            )}
 
                         </span>
 
@@ -1012,9 +1217,7 @@ function renderShops(
             `;
 
 
-            grid.appendChild(
-                card
-            );
+            grid.appendChild(card);
 
         });
 
@@ -1025,9 +1228,7 @@ function renderShops(
    DISTANCE
 ===================================================== */
 
-function calculateDistanceText(
-    shop
-) {
+function calculateDistanceText(shop) {
 
     if (!currentLocation) {
 
@@ -1121,9 +1322,7 @@ function calculateDistance(
 }
 
 
-function toRadians(
-    degrees
-) {
+function toRadians(degrees) {
 
     return degrees *
         Math.PI /
@@ -1145,7 +1344,9 @@ function filterShops() {
 
 
     if (!input) {
+
         return;
+
     }
 
 
@@ -1183,9 +1384,7 @@ function filterShops() {
 
                 ||
 
-                text.includes(
-                    search
-                );
+                text.includes(search);
 
 
             return (
@@ -1196,14 +1395,9 @@ function filterShops() {
         });
 
 
-    renderShops(
-        filtered
-    );
+    renderShops(filtered);
 
-
-    showMarkers(
-        filtered
-    );
+    showMarkers(filtered);
 
 }
 
@@ -1243,7 +1437,9 @@ function loadUserLocation() {
 
 
     if (!button) {
+
         return;
+
     }
 
 
@@ -1274,11 +1470,8 @@ function loadUserLocation() {
 
 
             currentLocation = {
-
-                lat: lat,
-
-                lng: lng
-
+                lat,
+                lng
             };
 
 
@@ -1469,7 +1662,9 @@ async function searchArea() {
 
 
     if (!input) {
+
         return;
+
     }
 
 
@@ -1520,11 +1715,8 @@ async function searchArea() {
 
 
         currentLocation = {
-
             lat,
-
             lng
-
         };
 
 
@@ -1626,9 +1818,7 @@ async function searchArea() {
    GEOCODING
 ===================================================== */
 
-async function geocodeArea(
-    area
-) {
+async function geocodeArea(area) {
 
     const url =
         "https://nominatim.openstreetmap.org/search" +
@@ -1726,10 +1916,7 @@ function setupCategoryButtons() {
                 if (explore) {
 
                     explore.scrollIntoView({
-
-                        behavior:
-                            "smooth"
-
+                        behavior: "smooth"
                     });
 
                 }
@@ -1788,7 +1975,9 @@ function setupSearch() {
 
 
     if (!input) {
+
         return;
+
     }
 
 
@@ -1817,7 +2006,9 @@ function setupShowAll() {
 
 
     if (!button) {
+
         return;
+
     }
 
 
@@ -1876,11 +2067,7 @@ function setupMobileMenu() {
         );
 
 
-    if (
-        !menu ||
-        !open ||
-        !close
-    ) {
+    if (!menu || !open || !close) {
 
         return;
 
@@ -1949,10 +2136,7 @@ function setupAreaSearch() {
         );
 
 
-    if (
-        !button ||
-        !input
-    ) {
+    if (!button || !input) {
 
         return;
 
@@ -2034,7 +2218,9 @@ function setupAddShop() {
 
 
     if (!button) {
+
         return;
+
     }
 
 
@@ -2056,9 +2242,7 @@ function setupAddShop() {
    ESCAPE HTML
 ===================================================== */
 
-function escapeHTML(
-    value
-) {
+function escapeHTML(value) {
 
     return String(value)
 
@@ -2090,9 +2274,7 @@ function escapeHTML(
 }
 
 
-function escapeAttribute(
-    value
-) {
+function escapeAttribute(value) {
 
     return escapeHTML(value);
 
